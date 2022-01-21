@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Thu Dec 16 08:57:52 2021
 
@@ -7,7 +5,7 @@ Created on Thu Dec 16 08:57:52 2021
 """
 
 
-from .pupils.windows import NoPupil
+from pyPSFstack.pupils.windows import NoPupil
 
 import numpy as np
 from scipy.optimize import minimize
@@ -16,9 +14,10 @@ from skimage.morphology import erosion, dilation
 def outer_pixels(stack):
     shape_stack = list(stack.shape)
     [NX, NY] = np.meshgrid(np.arange(shape_stack[0]),
-                            np.arange(shape_stack[1]))
-    outer_pix = (NX - (shape_stack[1]-1)/2)**2 +(NY - (shape_stack[0]-1)/2)**2 \
-                    > ((np.min(shape_stack[:2])-1)/2)**2
+                           np.arange(shape_stack[1]))
+    outer_pix = ((NX - (shape_stack[1]-1)/2)**2
+                 + (NY - (shape_stack[0]-1)/2)**2
+                 > ((np.min(shape_stack[:2])-1)/2)**2)
 
     return outer_pix.reshape(shape_stack[:2]+[1]*len(shape_stack[2:]))
 
@@ -59,24 +58,26 @@ def estimate_photobleach_background(data, model=None):
         amp_model = 1
     photobleach_amplitudes = amp_data / amp_model
     photobleach_amplitudes[photobleach_amplitudes>1]=1
-    scale = np.sum(photobleach_amplitudes * model_stack) / np.sum(data_stack)
+    scale = np.sum(photobleach_amplitudes*model_stack) \
+        / np.sum(data_stack)
     return photobleach_amplitudes, scale, scale*bckgd
 
 def trim_stack(stack, N_new):
     shape_stack = stack.shape
     N_pts = shape_stack[0]
     trimmed_stack = stack[(N_pts-N_new)//2:(N_pts+N_new)//2,
-                    (N_pts-N_new)//2:(N_pts+N_new)//2]
+                          (N_pts-N_new)//2:(N_pts+N_new)//2]
     return trimmed_stack
 
 def zeropad_stack(stack, N_new):
     N_old = stack.shape[0]
-    pad_width = [(N_new-N_old)//2,int(np.ceil((N_new-N_old)/2))]
-    padded_stack = np.pad(stack,[pad_width]*2+[[0,0]]*(stack.ndim-2))
+    pad_width = [(N_new-N_old)//2, int(np.ceil((N_new-N_old)/2))]
+    padded_stack = np.pad(stack, [pad_width]*2+[[0,0]]*(stack.ndim-2))
     return padded_stack
 
 def dag(array):
     return np.conj(np.swapaxes(array,-2,-1))
+
 
 class PSFStack():
     def __init__(self, pupils=[NoPupil()], zdiversity=None, pdiversity=None):
@@ -202,8 +203,8 @@ class PSFStack():
         self._compute_grad_pupils() 
 
     def _compute_grad_field_psf_stack(self):
-        self.grad_field_psf_stack = 2*self.grad_psf_stack[...,np.newaxis,np.newaxis]\
-                                    *self.field_psf_stack
+        self.grad_field_psf_stack = (2*self.grad_psf_stack[...,np.newaxis,np.newaxis]
+                                    *self.field_psf_stack)
     
     def _compute_grad_zdiv_psf(self):
         self.grad_zdiv_psf = np.sum(dag(self.pdiversity.jones_list)
