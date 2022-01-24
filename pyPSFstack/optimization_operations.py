@@ -27,6 +27,9 @@ class OptOperation():
             grad_params = []
         return grad_in, grad_params
 
+    def update_parameters(self, params):
+        pass
+
 
 class OperationSequence(OptOperation):
     def __init__(self, sequence):       
