@@ -16,8 +16,8 @@ class SEO(nn.Module):
         
         self.step = computation_size/N_pts
         # Limit the pupil to the maximum region of one to avoid wasting memory
-        ur = torch.empty((self.N_pupil,self.N_pupil), dtype=torch.cfloat)
-        ur[...] = polar_mesh(2, self.step)
+        ur, _ = polar_mesh(2, self.step)
+
         self.N_pupil = ur.shape[0]
         self.aperture = ur**2 <= aperture_size**2
 
@@ -26,8 +26,8 @@ class SEO(nn.Module):
         pupil_array = torch.empty((self.N_pupil,self.N_pupil,2,2), dtype=torch.cfloat)
         pupil_array[...,0,0] = torch.cos(self.c*ur/2) -1j*torch.sin(self.c*ur/2)*torch.cos(uphi)
         pupil_array[...,0,1] = -1j*torch.sin(self.c*ur/2)*torch.sin(uphi)
-        pupil_array[...,1,0] = self.pupil_array[...,0,1]
-        pupil_array[...,1,1] = torch.conj(self.pupil_array[...,0,0])
-        pupil_array = self.aperture * pupil_array 
+        pupil_array[...,1,0] = pupil_array[...,0,1]
+        pupil_array[...,1,1] = torch.conj(pupil_array[...,0,0])
+        pupil_array = self.aperture[...,None,None] * pupil_array 
         
-        return pupil_array * input
+        return pupil_array @ input

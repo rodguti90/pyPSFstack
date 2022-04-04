@@ -14,15 +14,18 @@ class UnitaryPolarizationAberrations(nn.Module):
         super(UnitaryPolarizationAberrations, self).__init__()
         self.c_q = []
         for q_ind in range(4):
-            self.c_q += [nn.Parameter(torch.zeros(jmax[0], requires_grad=True, dtype=torch.float))]
+            self.c_q += [torch.zeros(jmax[0], dtype=torch.float)]
         self.c_q[0][0] = 1
+        for q_ind in range(4):
+            self.c_q[q_ind] = nn.Parameter(self.c_q[q_ind], requires_grad=True)
+
         self.c_W = nn.Parameter(torch.zeros(jmax[4]-2, requires_grad=True, dtype=torch.float))
         self.jmax=jmax
         step = computation_size/N_pts
         # Limit the pupil to the maximum region of one to avoid wasating memory
         ux, uy = xy_mesh(2, step)
         self.N_pupil = ux.shape[0]
-        self.zernike_seq = zernike_sequence(jmax, 
+        self.zernike_seq = zernike_sequence(np.max(jmax), 
                                             index_convention, 
                                             ux/aperture_size, 
                                             uy/aperture_size)
@@ -43,4 +46,4 @@ class UnitaryPolarizationAberrations(nn.Module):
             + torch.sum(self.zernike_seq[...,self.defocus_j+1:]*self.c_W[self.defocus_j-1:],-1)
         Gamma = self.aperture*torch.exp(1j*2*np.pi*W)
 
-        return input * Gamma[...,None,None] * Q
+        return ( Gamma[...,None,None] * Q) @ input

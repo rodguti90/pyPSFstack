@@ -16,16 +16,16 @@ class ZDiversity(nn.Module):
         self.nf = nf
         self.step = computation_size/N_pts
         # Limit the pupil to the maximum region of one to avoid wasting memory
-        ur = torch.empty((self.N_pupil,self.N_pupil), dtype=torch.cfloat)
-        ur[...] = polar_mesh(2, self.step)
+        ur, _ = polar_mesh(2, self.step)
+
         self.N_pupil = ur.shape[0]
         self.aperture = ur**2 <= aperture_size**2
 
     def forward(self, input, z_list):
-        ur, _ = polar_mesh(2, self.step)
-        ur = np.empty((self.N_pupil,self.N_pupil,1), dtype=torch.cfloat)
-        ur[:,:,0], _ = self.polar_mesh()
-        pupil_array = self.aperture \
+        # ur, _ = polar_mesh(2, self.step)
+        ur = torch.zeros((self.N_pupil,self.N_pupil,1), dtype=torch.cfloat)
+        ur[:,:,0], _ = polar_mesh(2, self.step)
+        pupil_array = self.aperture[...,None] \
             *torch.exp(1j*2*np.pi*self.nf*z_list[None,None,:]*(1-ur**2)**(1/2)) 
         
         return pupil_array[...,None,None] * input[...,None,:,:]
@@ -44,8 +44,9 @@ class PDiversity(nn.Module):
     def forward(self, input):
         return self.jones_list @ input[...,None,:,:]
 
-def quarter2pol(angle_list):
-    n_ang = len(angle_list)
+def quarter2pol(angles):
+    n_ang = len(angles)
+    angle_list = torch.tensor(angles.tolist()) 
     quart2pol_analyzer = torch.zeros((2*n_ang,2,2), dtype=torch.cfloat)
     quart2pol_analyzer[:n_ang,0,0] = (torch.cos(angle_list)**2 + 1j*torch.sin(angle_list)**2)
     quart2pol_analyzer[:n_ang,0,1] = (1-1j)*torch.sin(angle_list)*torch.cos(angle_list)

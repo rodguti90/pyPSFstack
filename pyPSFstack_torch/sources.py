@@ -20,6 +20,7 @@ def compute_green(ux, uy, ni, nf):
     # The conservation of energy factor
     con_en = torch.empty((N_pts,N_pts,1,1), dtype=torch.cfloat)
     con_en[...,0,0] = (1 - ur2)**(1/4)
+    con_en[con_en==0] = 1e-10
 
     green_mat = torch.empty((N_pts,N_pts,2,3), dtype=torch.cfloat)
 
@@ -28,12 +29,16 @@ def compute_green(ux, uy, ni, nf):
     green_mat[...,0,2] = - ux * Phi1
     green_mat[...,1,1] = (uy**2 * (1- ur2)**(1/2) * Phi2 + ux**2 * Phi3)/ ur2
     green_mat[...,1,2] = - uy * Phi1
+    
+    ind_origin = ((ur2 == 0).nonzero())
+    if len(ind_origin)>0:
+        ind_origin = ind_origin[0]
+        green_mat[ind_origin[0],ind_origin[1],0,0] = Phi2[ind_origin[0],ind_origin[1]]
+        green_mat[ind_origin[0],ind_origin[1],1,1] = Phi3[ind_origin[0],ind_origin[1]]
+        green_mat[ind_origin[0],ind_origin[1],0,1] = 0
+
     green_mat[...,1,0] = green_mat[...,0,1]
-    origin = ur2 == 0
-    green_mat[origin,0,0] = Phi2[origin]
-    green_mat[origin,1,1] = Phi3[origin]
     green_mat = green_mat / con_en
-    green_mat = torch.nan_to_num(green_mat, nan=0.0, posinf=0.0, neginf=0.0)
     return green_mat
 
 class DipoleInterfaceSource(nn.Module):
@@ -55,7 +60,7 @@ class DipoleInterfaceSource(nn.Module):
         self.N_pupil = ux.shape[0]
         self.ur2 = torch.empty((self.N_pupil,self.N_pupil), dtype=torch.cfloat)
         self.ur2[...] = ux**2 + uy**2
-        aperture = self.ur2 <= aperture_size**2
+        aperture = self.ur2.type(torch.float) <= aperture_size**2
         self.green = aperture[...,None,None] * compute_green(ux, uy, ni, nf)
 
     def forward(self):
