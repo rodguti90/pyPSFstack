@@ -48,7 +48,9 @@ class DipoleInterfaceSource(nn.Module):
                  ):
         super(DipoleInterfaceSource, self).__init__()
 
-        self.alpha = nn.Parameter(torch.tensor((nf/ni)**3, requires_grad=True, dtype=torch.float))
+        # self.alpha = nn.Parameter(torch.tensor((nf/ni)**3, requires_grad=True, dtype=torch.float))
+        self.alpha = torch.tensor((nf/ni)**3)
+        
         self.delta =nn.Parameter(torch.tensor(delta, requires_grad=True, dtype=torch.float))
         
         self.ni = ni

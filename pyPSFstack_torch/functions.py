@@ -13,7 +13,8 @@ def xy_mesh(size, step):
     u_vec = torch.arange(-size/2,
                     size/2,
                     step, dtype = torch.float32)
-    return torch.meshgrid(u_vec,u_vec)
+    uy, ux = torch.meshgrid(u_vec,u_vec)
+    return ux, uy
 
 def polar_mesh(size, step):
     ux, uy = xy_mesh(size, step)

@@ -63,10 +63,15 @@ class IncoherentPSF(nn.Module):
         input = self.aberrations(input)
         input = self.zdiversity(input, z_list)
         input = fft.fftshift(
-            fft.fft2(fft.ifftshift(input,dim=(0,1)),
+            fft.fft2(input,
                      dim=(0,1),
                      s=(self.N_pts,self.N_pts)),
             dim=(0,1))
+        # input = fft.fftshift(
+        #     fft.fft2(fft.ifftshift(input,dim=(0,1)),
+        #              dim=(0,1),
+        #              s=(self.N_pts,self.N_pts)),
+        #     dim=(0,1))
         input = crop_center(input, N_data)
         input = self.pdiversity(input)
         output = torch.sum(torch.abs(input)**2,dim=(-2,-1))
@@ -74,7 +79,67 @@ class IncoherentPSF(nn.Module):
         return output
 
 
+class AberratedIncoherentPSF(nn.Module):
 
+    def __init__(self,
+                 pol_analyzer,
+                 angle_list,
+                 aperture_size=.99, 
+                 computation_size=4., 
+                 N_pts=128, 
+                 ni=1.33, 
+                 nf=1.518, 
+                 delta=0.1,
+                 jmax=[15]*5, 
+                 index_convention='fringe'
+                 ):
+        super(AberratedIncoherentPSF, self).__init__()
+        
+        self.N_pts = N_pts
+
+        self.source = DipoleInterfaceSource(
+            aperture_size=aperture_size,
+            computation_size=computation_size, 
+            N_pts=N_pts, 
+            ni=ni, 
+            nf=nf, 
+            delta=delta)
+
+        self.aberrations = UnitaryPolarizationAberrations(
+            aperture_size=aperture_size, 
+            computation_size=computation_size, 
+            N_pts=N_pts, 
+            jmax=jmax, 
+            index_convention=index_convention)
+
+        self.zdiversity = ZDiversity(
+            aperture_size=aperture_size, 
+            computation_size=computation_size, 
+            N_pts=N_pts, 
+            nf=nf)
+
+        self.pdiversity = PDiversity(pol_analyzer, angle_list=angle_list)
+
+    def forward(self, z_list, N_data):
+
+        input = self.source()
+        input = self.aberrations(input)
+        input = self.zdiversity(input, z_list)
+        input = fft.fftshift(
+            fft.fft2(input,
+                     dim=(0,1),
+                     s=(self.N_pts,self.N_pts)),
+            dim=(0,1))
+        # input = fft.fftshift(
+        #     fft.fft2(fft.ifftshift(input,dim=(0,1)),
+        #              dim=(0,1),
+        #              s=(self.N_pts,self.N_pts)),
+        #     dim=(0,1))
+        input = crop_center(input, N_data)
+        input = self.pdiversity(input)
+        output = torch.sum(torch.abs(input)**2,dim=(-2,-1))
+
+        return output
 
 
 # class ScalarPSF(nn.Module):

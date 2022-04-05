@@ -12,13 +12,17 @@ class UnitaryPolarizationAberrations(nn.Module):
                  N_pts=128, jmax=[15]*5, index_convention='fringe'
                  ):
         super(UnitaryPolarizationAberrations, self).__init__()
-        self.c_q = []
-        for q_ind in range(4):
-            self.c_q += [torch.zeros(jmax[0], dtype=torch.float)]
-        self.c_q[0][0] = 1
-        for q_ind in range(4):
-            self.c_q[q_ind] = nn.Parameter(self.c_q[q_ind], requires_grad=True)
-
+        tempq = torch.zeros((4,jmax[0]), dtype=torch.float)
+        tempq[0,0] = 1
+        self.c_q = nn.Parameter(tempq, requires_grad=True)
+        
+        # tempq = torch.zeros(jmax[0], dtype=torch.float)
+        # tempq[0] = 1
+        # self.cq0 = nn.Parameter(tempq, requires_grad=True)
+        # self.cq1 = nn.Parameter(torch.zeros(jmax[1], requires_grad=True, dtype=torch.float))
+        # self.cq2 = nn.Parameter(torch.zeros(jmax[1], requires_grad=True, dtype=torch.float))
+        # self.cq3 = nn.Parameter(torch.zeros(jmax[1], requires_grad=True, dtype=torch.float))
+        
         self.c_W = nn.Parameter(torch.zeros(jmax[4]-2, requires_grad=True, dtype=torch.float))
         self.jmax=jmax
         step = computation_size/N_pts
@@ -33,10 +37,10 @@ class UnitaryPolarizationAberrations(nn.Module):
         self.defocus_j = defocus_j(index_convention)
     
     def forward(self, input):
-        qs = []
+        qs = torch.zeros((4,self.N_pupil,self.N_pupil),  dtype=torch.cfloat)
         for q_ind in range(4):
-            qs += [torch.sum(self.c_q[q_ind]*self.zernike_seq[...,:self.jmax[q_ind]],-1)]
-        Q = torch.zeros((self.N_pupil,self.N_pupil,2,2), requires_grad=True, dtype=torch.cfloat)
+            qs[q_ind] = torch.sum(self.c_q[q_ind]*self.zernike_seq[...,:self.jmax[q_ind]],-1)
+        Q = torch.zeros((self.N_pupil,self.N_pupil,2,2), dtype=torch.cfloat)
         Q[...,0,0] = qs[0] + 1j*qs[3]
         Q[...,0,1] = qs[2] + 1j*qs[1]
         Q[...,1,0] = -qs[2] + 1j*qs[1]
