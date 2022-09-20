@@ -66,4 +66,4 @@ def fringe2nm(j):
             j_test = (1+(n+np.abs(m))/2)**2 -2*np.abs(m)+s -1
             if j == j_test: return n, m
 
-# def noll2mn(j):
+
