@@ -9,27 +9,6 @@ import numpy as np
 from ..pupil import Pupil
 
 
-class DipoleSource(Pupil):
-    def __init__(self, aperture_size=1., computation_size=4., 
-                 N_pts=128, ni=1.33, nf=1.518, delta=0.1, alpha=None):
-        Pupil.__init__(self, aperture_size, computation_size, N_pts)
-        
-        self.ni = ni
-        self.nf = nf
-        self.delta = delta
-        if alpha is None:
-            self.alpha = (self.nf/self.ni)**3
-            
-    def get_pupil_array(self):     
-
-        ux, uy = self.xy_mesh()
-        ur, _ = self.polar_mesh()
-        saf_defocus = compute_SAF_defocus(ur.astype(np.cfloat), 
-            self.ni, self.nf, self.delta, self.alpha) 
-        green = compute_green(ux, uy, self.ni, self.nf)
-        aperture = self.get_aperture()
-        return aperture * saf_defocus * green 
-
 class DipoleInterfaceSource(Pupil):
     def __init__(self, aperture_size=1., computation_size=4., 
                  N_pts=128, ni=1.33, nf=1.518, delta=0.1, alpha=None):
@@ -105,7 +84,29 @@ def compute_green(ux, uy, ni, nf):
     green_mat = np.nan_to_num(green_mat, nan=0.0, posinf=0.0, neginf=0.0)
 
     return green_mat
+
+
+# class DipoleSource(Pupil):
+#     def __init__(self, aperture_size=1., computation_size=4., 
+#                  N_pts=128, ni=1.33, nf=1.518, delta=0.1, alpha=None):
+#         Pupil.__init__(self, aperture_size, computation_size, N_pts)
         
+#         self.ni = ni
+#         self.nf = nf
+#         self.delta = delta
+#         if alpha is None:
+#             self.alpha = (self.nf/self.ni)**3
+            
+#     def get_pupil_array(self):     
+
+#         ux, uy = self.xy_mesh()
+#         ur, _ = self.polar_mesh()
+#         saf_defocus = compute_SAF_defocus(ur.astype(np.cfloat), 
+#             self.ni, self.nf, self.delta, self.alpha) 
+#         green = compute_green(ux, uy, self.ni, self.nf)
+#         aperture = self.get_aperture()
+#         return aperture * saf_defocus * green 
+
 # def fresnel_tp(ur, ni, nf):
 #     (2  * nf * (1 - nf**2 * ur2 / ni**2)**(1/2)) / \
 #         (nf * (1 - nf**2 * ur2 /ni**2)**(1/2)+ ni * (1 - ur2)**(1/2))
