@@ -2,8 +2,14 @@ import numpy as np
 from ..pupil import Pupil
 
 class ZDiversity(Pupil):
-    def __init__(self, z_list, nf=1.518, aperture_size = 1., computation_size=4., 
+
+    def __init__(self, 
+                 z_list, 
+                 nf=1.518, 
+                 aperture_size=1., 
+                 computation_size=4., 
                  N_pts=128):
+                 
         Pupil.__init__(self, aperture_size, computation_size, N_pts)
         
         self.z_list = np.reshape(np.array(z_list), (1,1,-1))
@@ -17,8 +23,15 @@ class ZDiversity(Pupil):
 
 
 class DDiversity(Pupil):
-    def __init__(self, diff_del_list, ni=1.33, nf=1.518, aperture_size = 1., computation_size=4., 
+
+    def __init__(self, 
+                 diff_del_list, 
+                 ni=1.33, 
+                 nf=1.518, 
+                 aperture_size = 1., 
+                 computation_size=4., 
                  N_pts=128):
+
         Pupil.__init__(self, aperture_size, computation_size, N_pts)
         
         self.diff_del_list = np.reshape(np.array(diff_del_list), (1,1,-1))
