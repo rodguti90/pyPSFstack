@@ -1,7 +1,11 @@
 import numpy as np
-from ..pupil import Pupil
+from ..pupil import PupilDiversity
 
-class ZDiversity(Pupil):
+class NoDiversity():
+    def forward(self, input):
+        return input
+
+class ZDiversity(PupilDiversity):
 
     def __init__(self, 
                  z_list, 
@@ -10,7 +14,7 @@ class ZDiversity(Pupil):
                  computation_size=4., 
                  N_pts=128):
                  
-        Pupil.__init__(self, aperture_size, computation_size, N_pts)
+        PupilDiversity.__init__(self, aperture_size, computation_size, N_pts)
         
         self.z_list = np.reshape(np.array(z_list), (1,1,-1))
         self.N_zdiv = len(z_list)
@@ -20,9 +24,9 @@ class ZDiversity(Pupil):
         ur, _ = self.polar_mesh()
         ur = (ur[...,None]).astype(np.cfloat)
         return np.exp(1j*2*np.pi*self.nf*self.z_list*(1-ur**2)**(1/2))
+    
 
-
-class DDiversity(Pupil):
+class DDiversity(PupilDiversity):
 
     def __init__(self, 
                  diff_del_list, 
@@ -32,7 +36,7 @@ class DDiversity(Pupil):
                  computation_size=4., 
                  N_pts=128):
 
-        Pupil.__init__(self, aperture_size, computation_size, N_pts)
+        PupilDiversity.__init__(self, aperture_size, computation_size, N_pts)
         
         self.diff_del_list = np.reshape(np.array(diff_del_list), (1,1,-1))
         self.N_ddiv = len(diff_del_list)
@@ -44,4 +48,5 @@ class DDiversity(Pupil):
         ur = (ur[...,None]).astype(np.cfloat)
         return np.exp(1j*2*np.pi*self.diff_del_list*self.ni
                       *(1-(self.nf*ur/self.ni)**2)**(1/2)) 
+
 
