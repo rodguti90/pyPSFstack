@@ -7,31 +7,33 @@ Created on Sun Dec 19 18:34:02 2021
 """
 import numpy as np
 
-from ..pupil import Pupil
+from ..pupil import BirefringentWindow
 from ..diversities.pola_diversities import jones_qwp
 
-class NoPupil(Pupil):
-    def __init__(sefl):
-        pass 
+# class NoPupil(Pupil):
+#     def __init__(sefl):
+#         pass 
     
-    def get_pupil_array(self):
-        return np.array([[1,0],[0,1]])
+#     def get_pupil_array(self):
+#         return np.array([[1,0],[0,1]])
 
-class SEO(Pupil):
+class SEO(BirefringentWindow):
     def __init__(self, aperture_size = 1., computation_size=4., 
                  N_pts=128, c=1.24*np.pi):
-        Pupil.__init__(self, aperture_size, computation_size, N_pts)
+        BirefringentWindow.__init__(self, aperture_size, computation_size, N_pts)
         self.c = c
 
     def get_pupil_array(self):
         ur, uphi = self.polar_mesh()
         return self.get_aperture() * jones_seo(ur, uphi, c=self.c)
 
+    # def forward(self, input):
+    #     return self.get_pupil_array() @ input
 
-class SEOQuarter(Pupil):
+class SEOQuarter(BirefringentWindow):
     def __init__(self, aperture_size = 1., computation_size=4., 
                  N_pts=128, c=1.24*np.pi, theta = np.pi/4):
-        Pupil.__init__(self, aperture_size, computation_size, N_pts)
+        BirefringentWindow.__init__(self, aperture_size, computation_size, N_pts)
         self.c = c
         self.theta = theta
 
