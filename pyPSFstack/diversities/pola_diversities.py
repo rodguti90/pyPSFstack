@@ -9,6 +9,9 @@ class PDiversity():
     def get_jones_list(self):
         raise NotImplementedError("Please Implement this method")
 
+    def forward(self, input):
+        return self.jones_list @ input[...,None,:,:]
+
 class PDiversity_QWP(PDiversity):
 
     def __init__(self, angles):
