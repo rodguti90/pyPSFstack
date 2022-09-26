@@ -68,16 +68,29 @@ class PSFStack():
     def model_experimental_stack(self, 
                                  bckgd_photons=20, 
                                  N_photons=200, 
+                                 norm='average',
                                  bleach_amplitudes=1, 
-                                 N_pts=None):
+                                 N_pts=None,
+                                 noise=True):
         rng = np.random.default_rng()
-        max_value = np.max(self.psf_stack)
-        if N_pts is not None:
-            stack = trim_stack(self.psf_stack, N_pts)/max_value
+        
+        if N_pts is None:
+            N_pts = self.N_pts
+        
+        stack = trim_stack(self.psf_stack, N_pts)
+       
+        if norm=='average':
+            ave = np.mean(np.sum(stack, axes=(0,1)))
+            stack /= ave
+        elif norm=='max':
+            max_value = np.max(stack)
+            stack /= max_value
         else:
-            stack = self.psf_stack/max_value
+            raise ValueError('Invalid option for norm')
+
         stack = np.round(N_photons*bleach_amplitudes*stack + bckgd_photons)
-        stack = rng.poisson(stack)
+        if noise:
+            stack = rng.poisson(stack)
         return stack
 
     
