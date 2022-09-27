@@ -56,14 +56,6 @@ class PSFStack():
             axes=(0,1))/self.N_pts
         return output
 
-    # def _incoherent_sum(self, input):
-    #     return np.sum(np.abs(input)**2, axis=(-2,-1))
-
-    # def _coherent_dipole(self, input, vec):
-    #     field = input @ (np.array(vec))
-    #     return np.sum(np.abs(field)**2, axis=-1)
-
-
 
     def model_experimental_stack(self, 
                                  bckgd_photons=20, 
