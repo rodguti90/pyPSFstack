@@ -67,7 +67,7 @@ different polarization channels.
 \section{Intro}
 
 General intro about fluorescence microscopy, SMOLM and PSF engineering.
-Finish by saying something all=ong th elines of:
+Finish by saying something along the lines of:
 However, any aberration or misalignment in the system can affect the 
 final shape of the PSFs and thus lead to an inaccurate estimate of the 
 parameters. 
@@ -88,14 +88,14 @@ interface between the suspension medium and the immersion liquid used for
 the high-NA microscope objective \cite{novotny2006principles}. Moreover,
 it is also necessary to consider that the most common sources, 
 such as fluorescent nanobeads, emit 
-incoherent light and their size can thus lead to a noticable blurring of 
+incoherent light and their size can thus lead to a noticeable blurring of 
 the PSFs.
 Given these more accurate assumptions, 
-iterative algortihms cannot be directly applied and have to be adapted which 
-can make them ustable, although some succes has been demostrated 
-\cite{thao2019phase}. A more natural appproach is to use nonlinear optimization
+iterative algorithms cannot be directly applied and have to be adapted which 
+can make them unstable, although some success has been demonstrated 
+\cite{thao2019phase}. A more natural approach is to use nonlinear optimization
 \cite{fienup1982phase,ferdman2020vipr}
-since it provides us with the freedom to incorporate othe unknown parameters
+since it provides us with the freedom to incorporate other unknown parameters
 into the estimation, such as the photobleaching amplitudes or the background 
 illumination.
 
@@ -107,7 +107,7 @@ into the shape of the two polarization components of the PSF.
 Therefore, it is important to update the model of propagation for an accurate
 characterization or design of SMOLM systems. In this work, we propose a 
 characterization technique and algorithm to estimate the polarization aberrations 
-of the sytem \cite{hansen1988overcoming} as well as other unknown (or poorly known) parameters. 
+of the system \cite{hansen1988overcoming} as well as other unknown (or poorly known) parameters. 
 This is done by applying a nonlinear optimization algorithm to a physical model
 where the aberrations (or widow we want to design) are now represented by a Jones
 matrix. The implementation is done with the 
@@ -116,11 +116,11 @@ all the gradient computation \cite{}. Additionally, we show that, in general,
 it is necessary to introduce polarization diversity in the measurements 
 in order to properly characterize the polarization response. This is similar 
 to the introduction of phase diversity by taking images at various focal planes.
-Additionally, we implement the most usful method for taking into account the 
+Additionally, we implement the most useful method for taking into account the 
 blurring to the size of the nanobead discussed in \cite{}.
 It should also be noted that all the results obtained in this work 
 were achieved with the software \texttt{torchPSFstack} which is freely 
-accesible at \cite{}.
+accessible at \cite{}.
 
 % This is the goal of this work 
 % where we define a phase retrieval algorithm to retrieve the Jones matrix at 
@@ -210,11 +210,11 @@ The first step is to have the most accurate model for the propagation
 of light through our microscope. As shown in Fig.~\ref{fig:aplanatic}, 
 the source is embedded in a medium of index of refraction $n_i$ at a 
 distance $d_{cs}>0$ from the interface with immersion oil of index of 
-refraction $n_f$, the interface is given by the coverslip wihch is assumed
+refraction $n_f$, the interface is given by the coverslip which is assumed
 to be index matched to the immersion oil. For a dipolar source, the green 
 tensor at the back-focal plane (BFP) of a high-NA objective can be 
-computed by decompositing the using Richards-Wolf diffraction 
-theory for an aplanatic systems \cite{richards1959electromagnetic,
+computed through Richards-Wolf diffraction 
+theory for aplanatic systems \cite{richards1959electromagnetic,
 novotny2006principles}. An important step in this calculation is to  
 take into account the interface between the two media since it introduces 
 spherical aberration and the coupling of evanescent waves when $n_f > n_i$,
@@ -223,20 +223,20 @@ which  can contribute to more than
 half of the radiation reaching the detector \cite{hellen1987fluorescence,
 axelrod2001total,axelrod2013evanescent}.
 
-\begin{figure}
-  \centering
-  \includegraphics[width=.9\linewidth]{aplanatic.pdf}
-  \caption{\label{fig:aplanatic} . }
-  \end{figure}
+% \begin{figure}
+%   \centering
+%   \includegraphics[width=.9\linewidth]{aplanatic.pdf}
+%   \caption{\label{fig:aplanatic} . }
+%   \end{figure}
 
 Following \cite{lieb2004single,novotny2006principles} and assuming that 
 light propagates along the positive $\hat z$ direction, the Green tensor 
 at the BFP,
 \begin{align} \label{eq:G0}
-\bt G_0 (\bt u) = &   e^{-\im k n_i \bs \rho_o \cdot \bt u } 
-\exp \left[\im k n_m d_\text{cs} 
-\sqrt{1 - \left(\frac{n_i u}{n_m} \right)^2 } \right]  \nonumber \\
-& \times \exp \left(\im k n_i z_f \sqrt{1 - u^2} \right) \bt g (\bt u) ,
+\bt G_0 (\bt u) = &   e^{-\im k n_f \bs \rho_o \cdot \bt u } 
+\exp \left[\im k n_i d_\text{cs} 
+\sqrt{1 - \left(\frac{n_f u}{n_i} \right)^2 } \right]  \nonumber \\
+& \times \exp \left(\im k n_f z_f \sqrt{1 - u^2} \right) \bt g (\bt u) ,
 \end{align}
 where 
 \begin{align}
@@ -250,13 +250,14 @@ g_{yx}  (\bt u)& g_{yy}  (\bt u)& g_{yz} (\bt u)
 \end{align}
 with the explicit form of  its components given in the Appendix,
 $\bs \rho_o =(x_o,y_o)$  denotes the transverse location of the dipole, 
+$k=2 \pi/\lambda$ is the wavenumber with $\lambda$ being the wavelength,
 and 
 $z_f$ is the location of the focal plane from the interface, $z_f<0$ 
 ($z_f>0$) if the focal plane is in the medium with index of refraction 
 $n_i$ ($n_f$). The vector 
 $\bt u = (u_x, u_y)$ denotes the normalized coordinates at the BFP, 
 see Fig.~\ref{fig:aplanatic}. The maximum value of $u = \norm{\bt u}$ is 
-limited by the NA through $u_\text{max} = \text{NA}/n_i$. 
+limited by the NA through $u_\text{max} = \text{NA}/n_f$. 
 The matrix elements $g_{ij}$ include the effect of the Fresnel coefficients 
 of the boundary and depend on $\bt u$ but not on the location of the dipole 
 or the focal plane.  For a dipole oriented along the unit vector 
@@ -325,8 +326,8 @@ q_0(\bt u) + \im q_3(\bt u) &q_2(\bt u) + \im q_1(\bt u) \\
 which allows separating the scalar aberrations, contained 
 in $W$ from the vectorial correction given by the $q$'s. 
 Since aberrations tend to be described by smooth functions, it generally 
-sufices to decompose the various elements of the Jone matrix using the 
-Zernike polynomials which consititute a complete basis on the unit disk.
+suffices to decompose the various elements of the Jones matrix using the 
+Zernike polynomials which constitute a complete basis on the unit disk.
 Therefore, we write
 \begin{align}
   W (\bt u) = &\sum'_l c_{l}^{(W)} Z_l(\bt u/u_\text{max}) ,\\
@@ -356,11 +357,11 @@ setting the coefficients $c^{(j)}_l=0$ for all $l$ and $j=1,2,3$.
 
 In general the position chosen as the nominal focus (or best focus) $z_f$ and 
 distance to the coverslip of the emitter $d_\text{cs} $ are not perfectly 
-known. Therfore,
+known. Therefore,
 it is worth considering them as part of the optimization parameters that 
-will be estimated along with the coefficients of the Zernike decompositions 
-of the birefringent mask. The most obvious soluttion is to directly 
-use $z_f$ and $d_{text{cs}}$ as parameters, however both phase 
+will be estimated along with the coefficients of the Zernike decomposition 
+of the birefringent mask. The most obvious solution is to directly 
+use $z_f$ and $d_{\text{cs}}$ as parameters, however both phase 
 terms have similar effect when the 
 radial coordinate $u$ is below the SAF radiation and this might cause the 
 nonlinear optimization to fall into a local minimum which does not provide
@@ -369,7 +370,7 @@ Moreover, the estimation
 of the distance of the best focus $z_f$ will generally depend on the distance 
 of the nanobead from the coverslip. For example, if the paraxial 
 approximation is used then the distance to the best focus will be 
-$z_f = -n_i d_\text{cs} /n_m$. A similar result will hold even if we consider 
+$z_f = -n_f d_\text{cs} /n_i$. A similar result will hold even if we consider 
 the spherical aberration induced by the interface, the only thing that changes 
 is the factor in front of $d_\text{cs} $. Therefore, it is best to 
 consider instead
@@ -378,7 +379,9 @@ consider instead
 \end{align}
 where
 \begin{multline}
-D_{\delta, \alpha} (\bt u)= \exp \Bigg\{  \im 2 \pi n_i  \delta \Bigg[ \frac{n_m}{n_i} \sqrt{1 - \left(\frac{n_i u}{n_m} \right)^2 }  \\
+D_{\delta, \alpha} (\bt u)= \exp \Bigg\{  
+  \im 2 \pi n_f  \delta \Bigg[ \frac{n_i}{n_f} 
+  \sqrt{1 - \left(\frac{n_f u}{n_i} \right)^2 }  \\
 - \alpha \sqrt{1 - u^2} \Bigg] \Bigg\} , 
 \end{multline}
 with $\delta = d_\text{cs} / \lambda$ and $z_f = -\alpha d_\text{cs}$. 
@@ -404,12 +407,12 @@ location of the best focus. This varying focal
 distances are taken into account by multiplying the Green tensor by 
 the phase factor
 \begin{align}
-D^\zeta (\bt u) =  \exp \left[ \im k n_i \Delta z_\zeta  \sqrt{1 - u^2} \right] 
+D^\zeta (\bt u) =  \exp \left[ \im k n_f \Delta z_\zeta  \sqrt{1 - u^2} \right] 
 \end{align}
 This additional information, referred to as phase diversity, helps the 
 algorithm converge to an appropriate solution without falling into 
 local minima and helps discriminate between the right and left phase vortices. 
-These measurments are sufficient when the aberrations are taken as 
+These measurements are sufficient when the aberrations are taken as 
 scalar, however when birefringence effects need to be taken into account 
 it is necessary to implement a method to also provides information 
 about the polarization state of the PSFs for each focal distance. 
@@ -417,7 +420,7 @@ This supplementary information can be obtained by inserting a polarization
 analyzer right after the 
 birefringence mask (see Fig.~\ref{fig:setup}). This polarization analyzer 
 can be composed of a combination of waveplates and polarizers where at least
-one elemnt can rotate in order to change the polarization projection of 
+one element can rotate in order to change the polarization projection of 
 the output. This polarization diversity is modeled by a set of constant 
 Jones matrices $\bt P^{(p)}$ that is applied after all other birefringent masks.
 Therefore, the stack of Green tensors at the BFP is given by
@@ -426,11 +429,11 @@ Therefore, the stack of Green tensors at the BFP is given by
 \cdot \bt J_\text{A}(\bt u) \cdot \bt J_\text{M}(\bt u) \cdot \bt G_0  (\bt u).
 \end{align}
 In this model $\bt J_\text{M}$ represents any known
-birefringent mask into the nominal Green tensor which can have approximatly known
+birefringent mask into the nominal Green tensor which can have approximately known
 parameters that can be incorporated into the optimization routine.
-It is worth noting that while experimentlly the polarization diversity happens at 
+It is worth noting that while experimentally the polarization diversity happens at 
 the BFP, computationally it is better to perform it at the image plane in 
-order to avoid the computation of unecessary DFTs.
+order to avoid the computation of unnecessary DFTs.
 
 
 \subsection{Modeling the total measured intensity}
@@ -438,10 +441,12 @@ order to avoid the computation of unecessary DFTs.
 To model the intensity measured by the camera, the Green tensor is first 
 propagated to the image plane via,
 \begin{align}
-\bt G^{(\zeta ,p)}_\text{IP} (\bs \rho ) = \iint \bt G^{(\zeta ,p)}_\text{BFP} (\bt u)  e^{ - \im k  \frac{n_i \bs \rho}{M}  \cdot \bt u } \ud \bt u .
+\bt G^{(\zeta ,p)}_\text{IP} (\bs \rho ) 
+= \iint \bt G^{(\zeta ,p)}_\text{BFP} (\bt u)  
+e^{ - \im k  \frac{n_f \bs \rho}{M}  \cdot \bt u } \ud \bt u .
 \end{align}
 Here, it will be assumed that the source emits fully unpolarized light. This 
-os the case for fluorescing nanobeads which are commonly used to characterize or test 
+is the case for fluorescing nanobeads which are commonly used to characterize or test 
 fluorescence microscopes since they have a stronger signal than that emitted 
 by single fluorescing molecules. In this case the measured intensity is 
 given by the incoherent sum of the PSFs produced by dipoles oriented along 
@@ -451,7 +456,7 @@ norm of the Green tensor at the image plane
 I^{(\zeta ,p)}_\text{IP} (\bs \rho ) = \norm{\bt G^{(\zeta ,p)}_\text{IP} }^2 
 = \sum_{i=x,y} \sum_{j=x,y,z} |G^{(\zeta ,p)}_\text{IP,ij}( \bt u)|^2.
 \end{align}
-Depending on the size of the nano-particle it might be necessary to perform 
+Depending on the size of the source it might be necessary to perform 
 one of the blurring operations described in \cite{}. If a three-dimensional 
 blurring is needed the computation of supplementary quantities will need to 
 added to the forward model, for example, for the exact hard-sphere model 
@@ -459,8 +464,10 @@ we would also need to compute the total intensity for other values of $d_cs$.
 The downside is that this would slow the algorithm considerably. 
 However, as long as their 
 diameter is smaller than 30nm one can safely skip this step.
+More details about the blurring models implemented can be found in the 
+Supplementary Information.
 
-As a last step for computing th emeasured intensity, we also consider 
+As a last step for computing the measured intensity, we also consider 
 the effect of photobleaching of the fluorescing nanobeads and the background 
 illumination. The photobleaching causes the number of photons emitted by the 
 nanobead to diminish with time. Its effect can be taken into account by 
@@ -472,121 +479,57 @@ across each intensity image and determined by the term
 $\mathcal{B}^{(p,\zeta)}$. Therefore, the final total measured intensities 
 of the ZP stack are given by 
 \begin{align}
-I^{(\zeta ,p)}_\text{tot} (\bs \rho )  =  \mathcal{A}^{(p,\zeta)} I^{(\zeta ,p)}_\text{IP} (\bs \rho ) + \mathcal{B}^{(p,\zeta)}.
+I^{(\zeta ,p)}_\text{tot} (\bs \rho )  
+  =  a^{(p,\zeta)} I^{(\zeta ,p)}_\text{IP} (\bs \rho ) + b^{(p,\zeta)}.
 \end{align}
 It is possible to assume a more complicated model for the background 
 illumination, such as a quadratic expansion \cite{aristov2018zola}. 
 
 \subsection{Cost function}
 
-This modeled ZP stack of intensity images is then compared to the measured 
-ZP stack $I^{(\zeta ,p)}_\text{E}$ through a cost function. 
+The last piece we need to consider is the choice of a cost function that 
+compares how good our modeled PSFs $I^{(\zeta ,p)}_\text{tot}$
+are compared to the measured ones $I^{(\zeta ,p)}_\text{exp}$.
+Under the absence of noise, any choice of cost function that has a minimum 
+when the two quantities are the same should provide the same result. However,
+noise is ever present in experimental measurements and thus needs to be taken
+account. If the noise in the camera follows a Poisson distribution then the 
+log-likelihood cost function,
+\begin{align}
+  \mathcal{C}_\text{LL} = \sum_{\zeta,p} \iint w(\bs \rho )\left\{ 
+    I^{(\zeta ,p)}_\text{exp} (\bs \rho )
+  \log \left[ I^{(\zeta ,p)}_\text{tot} (\bs \rho ) \right]
+  - I^{(\zeta ,p)}_\text{tot} (\bs \rho )\right\} \ud^2 \bs \rho.
+\end{align}
+Whereas if it follows a Gaussian distribution then the sum of the squared 
+difference is the most appropriate,
+\begin{align}
+  \mathcal{C}_\text{SS} = \sum_{\zeta,p} \iint w(\bs \rho )\left[
+    I^{(\zeta ,p)}_\text{exp} (\bs \rho )
+  - I^{(\zeta ,p)}_\text{tot} (\bs \rho )\right]^2 \ud^2 \bs \rho.
+\end{align}
+A window function $w$ has been introduced to represent the use of a finite
+region at the image plane and to exclude bad pixels if there are any.
+It is also worth making a technical note. In order for the choice of cost function 
+to make sense we need to use as $I^{(\zeta ,p)}_\text{exp}$ the values that 
+actually follows the assumed distribution. In general this means that the images
+should not be denoised and that the offset of the camera should be removed.
+A detailed description for the forward model can be found in the Supplementary 
+Information. 
 
 
-\section{Numerical implementation of the phase retrieval}
-
-\subsection{Forward model}
-
-In order to implement the phase retrieval algorithm, it is necessary to 
-perform all the calculations numerically. Therefore, it will be assumed 
-that all the spatially dependent quantities are sampled in a consistent 
-manner with the pixel pitch of the camera. This two-dimensional sampling 
-will be labeled with a  lexicographic index $\bs \ell $ which will take 
-over the spatial dependence on $\bt u$ and $\bs \rho$, for instance 
-$ \bt G_\text{J} (\bt u) \rightarrow  \bt G_\text{J} (\bs \ell )$. 
-The propagation integral will be computed through fast Fourier 
-transformations denoted by DFT and defined through the one-dimensional 
-kernel $\exp (-\im 2 \pi \ell' \ell/L ) / L $ where $L$ is the total 
-number of points. Its inverse is denoted by IDFT and defined by the 
-kernel $\exp (-\im 2 \pi \ell' \ell/L ) / L^{1/2}$.
-
-Assuming that only the Zernike decomposition coefficients are being 
-optimized over then the forward model can be simply written as:
-\begin{enumerate}
-\item Compute the amplitude and phase or real and imaginary parts of the 
-Pauli coefficients
-\begin{align*}
-A_{0}^{(A,P)} (\bs \ell) = &\sum_l c_{0,l}^{(A,P)}Z_l(\bs \ell) ,\\
-A_{j}^{(R,I)} (\bs \ell) = &\sum_l c_{j,l}^{(R,I)}Z_l(\bs \ell),
-\end{align*}
-\item Compute the Pauli components
-\begin{align*}
-A_0(\bs \ell)  = &A_0^{(A)}(\bs \ell)  e^{\im 2 \pi  A_0^{(P)}(\bs \ell) },\\
-A_j (\bs \ell) = & A_j^{(R)}(\bs \ell)  + \im A_j^{(I)} (\bs \ell) .
-\end{align*}
-\item Compute the Jones matrix of the aberrations
-\begin{align*}
-\bt J_\text{A}(\bs \ell) 
-=& \left(
-\begin{array}{cc}
-A_0 (\bs \ell)  + A_1 (\bs \ell) & A_2(\bs \ell) - \im A_3(\bs \ell)   \\
-A_2 (\bs \ell) + \im A_3 (\bs \ell)  & A_0(\bs \ell)  - A_1(\bs \ell) 
-\end{array}
-\right).
-\end{align*}
-\item Compute the Green tensor at the BFP 
-\begin{align*}
-\bt G_\text{BFP} (\bs \ell) =    \bt J_\text{A}(\bs \ell) \cdot \bt G_\text{J}  (\bs \ell).
-\end{align*}
-\item Include the phase diversity in the Green tensor at the BFP  but \emph{not} the polarization diversity
-\begin{align*}
-\bt G^{(\zeta )}_\text{BFP} (\bs \ell) =  D^{(\zeta )} (\bs \ell)  \bt G_\text{BFP}  (\bs \ell).
-\end{align*}
-\item  Propagate to the image plane 
-\begin{align*}
-\bt G^{(\zeta )}_\text{IP} (\bs \ell) =  \text{DFT} \{ \bt G_\text{J}  (\bs \ell' ) \} .
-\end{align*}
-\item Propagate through the polarization analyzer
-\begin{align*}
-\bt G^{(\zeta , p)}_\text{IP} (\bs \ell) = \bt P^{(p)} \cdot \bt G^{(\zeta )}_\text{IP} (\bs \ell)  .
-\end{align*}
-\item Compute the intensity 
-\begin{align*}
-I^{(\zeta ,p)}_\text{IP} (\bs \ell )  = \sum_{i=x,y} \sum_{j=x,y,z} |G^{(\zeta ,p)}_\text{IP,ij}( \bs \ell )|^2.
-\end{align*}
-\item Take into  account the photobleaching and the background illumination 
-\begin{align*}
-I^{(\zeta ,p)}_\text{tot} (\bs \ell )  =  \mathcal{A}^{(p,\zeta)} I^{(\zeta ,p)}_\text{IP} (\bs \ell ) + \mathcal{B}^{(p,\zeta)} .
-\end{align*}
-\item Compute the cost function by masking with $w(\bs \ell)$ bad pixels or computed points that are outside of those provided by the measured intensities 
-\begin{align*}
-\mathcal{C}_\text{SD} = & \sum_{\zeta, p} \sum_{\bs \ell } w(\bs \ell )  \left[ I^{(\zeta ,p)}_\text{E}(\bs \ell ) -I^{(\zeta ,p)}_\text{tot} (\bs \ell ) \right]^2 \quad \text{or} \\
-\mathcal{C}_\text{LL} = &- \sum_{\zeta, p} \sum_{\bs \ell }  w(\bs \ell ) \left\{ I^{(\zeta ,p)}_\text{E} (\bs \ell ) \ln \left[  I^{(\zeta ,p)}_\text{tot} (\bs \ell ) \right] - I^{(\zeta ,p)}_\text{tot} (\bs \ell ) \right\}.
-\end{align*}
-\end{enumerate}
-In the last step, the two most common choices for the cost function were introduced. The first, $ \mathcal{C}_\text{SD}$, is the sum of the squared difference between the modeled and measured ZP stacks. 
-This cost function is well-suited when the noise follows a Gaussian distribution. However, for fluorescence microscopy given the low number of incident photons, the noise follows a Poisson distribution. In this case the log-likelihood cost function $\mathcal{C}_\text{LL}$ is more appropriate. It is worth making a technical note at this point. In order for the Poisson distribution to work best we need to work with the data that follows a Poisson distribution which means that the noise in the measured data should not be removed, and the offset specific to the camera should have been removed.
-
-
-
-\subsection{Extra parameters}
-
-As was already discussed, in experimental settings it often happens that some values can only be approximately known. The advantage of the nonlinear optimization approach to phase retrieval is that these parameters can also be estimated. These include the $\delta$ and $\alpha$ parameters introduced earlier, but also the photobleaching amplitudes $ \mathcal{A}^{(p,\zeta)}$ and the background illumination $\mathcal{B}^{(p,\zeta)}$. Moreover, the modular form of the forward model and the gradient computation greatly simplifies their inclusion. Depending on how the particular parameter enters the forward model it might be necessary to add a parallel branch which merges with the main one presented in the previous section. But in every case, it will be necessary branch out the backward model in order to perform the gradient computation. 
-
-Given that the forward and backward models can be easily identified by the absence or presence of an overbar in the left hand side term, we only need a nomenclature to identify the various branches. For this, a letter following the step number will be used with the same letter being used for the forward and backward models. Furthermore, we assume there is an implicit letter ``a'' following the step numbers of the main branch.
-
-For the $\delta$ and $\alpha$ parameters  the merging in the forward model occurs at step 4 since they are already included in the term $ \bt G_\text{J}  (\bs \ell)$. 
-\begin{enumerate}
-\item[1b.] Compute the complex argument of the exponential term containing the defocus and SAF terms
-\begin{multline*}
-S_{\delta, \alpha} (\bs \ell)=  \im 2 \pi n_i  \delta \Bigg[ \frac{n_m}{n_i} \sqrt{1 - \left(\frac{n_i u(\bs \ell)}{n_m} \right)^2 }  
-- \alpha \sqrt{1 - u^2(\bs \ell)} \Bigg]  , 
-\end{multline*}
-\item[2b.] Compute the exponential
-\begin{align*}
-D_{\delta, \alpha} (\bs \ell)= e^{S_{\delta, \alpha} (\bs \ell)} .
-\end{align*}
-\item[3b.] Compute the Green tensor including the birefringent mask, the defocus and SAF terms
-\begin{align*}
- \bt G_\text{J}  (\bs \ell) = D_{\delta, \alpha} (\bs \ell) \bt g_\text{J} (\bs \ell) .
-\end{align*}
-\end{enumerate}
-
-\section{Implementation of the phase retrieval algorithm}
+\section{Numerical experiments}
 
 \subsection{Initial considerations}
 
-To exemplify the implementation of the phase retrieval algorithm, let us consider the setup used for CHIDO. In this case the birefringent window is composed of a stress engineered optical (SEO) element followed by a quarter-wave plate at $45^{\circ}$. Afterwards, the light is separated into its $x$ and $y$ linear polarization components with a Wollaston prism which are then measured by the camera. This same setup can be used to obtain the necessary ZP stack for the phase retrieval algorithm by taking the SEO as the birefringent mask given by the Jones matrix
+To exemplify the implementation of the phase retrieval algorithm, 
+let us consider the setup used for CHIDO. In this case the birefringent 
+window is composed of a stress engineered optical (SEO) element followed by 
+a quarter-wave plate at $45^{\circ}$. Afterwards, the light is separated into 
+its $x$ and $y$ linear polarization components with a Wollaston prism which are 
+then measured by the camera. This same setup can be used to obtain the necessary 
+ZP stack for the phase retrieval algorithm by taking the SEO as the birefringent 
+mask given by the Jones matrix
 \begin{align}
 \bt J_\text{SEO} (\bt u) = & \cos \frac{c u}{2}
 \left( \begin{array}{cc}
@@ -622,108 +565,66 @@ and the quarter-wave plate along with the Wollaston as the polarization analyzer
 {\begin{pmatrix}\cos ^{2}\theta_p +i\sin ^{2}\theta_p &(1-i)\sin \theta_p \cos \theta_p \\(1-i)\sin \theta_p \cos \theta_p &\sin ^{2}\theta_p +i\cos ^{2}\theta_p \end{pmatrix}}
 \end{align}
 where $\theta_p$ is the angle of the fast axis with respect to the $x$ axis.
-Having defined the polarization diversity, the ZP stack can be acquired by taking images of the PSFs for all the polarization diversity at various focal planes. Note that before using these images for the retrieval of the aberrations and the other parameters, they need to be processed so that they follow the assumed statistics. This is done by converting the value at each pixel from the arbitrary gray scale value to the number of photocount events. In most cases, an offset value needs to be removed (if any pixel has a negative value then it should be set to zero), and then the gray value should be converted to the number of photoelectrons. 
+Having defined the polarization diversity, the ZP stack can be acquired by 
+taking images of the PSFs for all the polarization diversity at various 
+focal planes. Note that before using these images for the retrieval of the 
+aberrations and the other parameters, they need to be processed so that they 
+follow the assumed statistics. This is done by converting the value at each 
+pixel from the arbitrary gray scale value to the number of photocount events. 
+In most cases, an offset value needs to be removed (if any pixel has a 
+negative value then it should be set to zero), and then the gray value 
+should be converted to the number of photoelectrons. 
 
-Before being able to launch the phase retrieval, all the parameters that are going to be estimated need to be provided with an initial value. For the Zernike coefficients, the simplest choice is to set all equal to zero except the first coefficient of $A_0{(A)}$ which reduces the aberration matrix to the identity.
+Before being able to launch the phase retrieval, all the parameters that are 
+going to be estimated need to be provided with an initial value. For the 
+Zernike coefficients, the simplest choice is to set all equal to zero except 
+the first coefficient of $A_0{(A)}$ which reduces the aberration matrix 
+to the identity.
  
-Depending on the particular type of sample used for acquiring the ZPstack, the distance to the coverslip might be estimated. For example, if the emitters are fixed at the surface of the coverslip then $d_\text{cs}$ is equal to the radius of the nanobead or if they are attached to a macro sphere, $d_\text{cs}$ can be estimated by the radial distance of the emitter from the center of the macrosphere. When $d_\text{cs}$ cannot be estimated from the sample, if the setup allows imaging the pupil $d_\text{cs}$ can be estimated from the exponential decay of the SAF radiation. Otherwise, an initial value not much greater to the nanobead's radius should work fine. 
+Depending on the particular type of sample used for acquiring the ZPstack, the 
+distance to the coverslip might be estimated. For example, if the emitters are 
+fixed at the surface of the coverslip then $d_\text{cs}$ is equal to the radius 
+of the nanobead or if they are attached to a macro sphere, $d_\text{cs}$ can be 
+estimated by the radial distance of the emitter from the center of the 
+macrosphere. When $d_\text{cs}$ cannot be estimated from the sample, if the 
+setup allows imaging the pupil $d_\text{cs}$ can be estimated from the 
+exponential decay of the SAF radiation. Otherwise, an initial value not 
+much greater to the nanobead's radius should work fine. 
 
-For the parameter setting the distance of the best focus in terms of $d_\text{cs}$ there are several options. If, experimentally, there is a particular criteria to choose the best focus, e.g. the smallest rms width of the PSFs, then the same one could be used to define it. However, if the best focus is defined experimentally ``by eye'' then there are several sensible options, such as the parameter that  sets the second derivative of the defocus and SAF wavefront equal to zero or that the average of the first derivative is zero. It should be noted that in general this parameter should be greater than the one used for the paraxial focus sin the PSF quickly degrades as we move away from and closer to the coverslip but not when we move to the other side. 
+For the parameter setting the distance of the best focus in terms of 
+$d_\text{cs}$ there are several options. If, experimentally, there is a 
+particular criteria to choose the best focus, e.g. the smallest rms width 
+of the PSFs, then the same one could be used to define it. However, if the 
+best focus is defined experimentally ``by eye'' then there are several 
+sensible options, such as the parameter that  sets the second derivative 
+of the defocus and SAF wavefront equal to zero or that the average of the 
+first derivative is zero. It should be noted that in general this parameter 
+should be greater than the one used for the paraxial focus sin the PSF 
+quickly degrades as we move away from and closer to the coverslip but not 
+when we move to the other side. 
 
-The background illumination can be estimated directly form the images in the experimental ZP stack by averaging the pixels in the corners of each PSF image or in an empty region close to the nanobead being analyzed. Finally for the phobleaching coefficients, they could all be set equal to zero if the effect is negligible. Otherwise, they can be estimated numerically computing the PSFs, setting the scale of the computed PSFs so that the intensity of one of them is equal to the corresponding experimental image (the calculations should either include the background or it should be removed for the data just for his step), and then setting the photobleaching amplitudes equal to the ratio between the total intensity of the data and the modeled PSFs. 
+The background illumination can be estimated directly form the images in 
+the experimental ZP stack by averaging the pixels in the corners of each 
+PSF image or in an empty region close to the nanobead being analyzed. 
+Finally for the phobleaching coefficients, they could all be set equal 
+to zero if the effect is negligible. Otherwise, they can be estimated 
+numerically computing the PSFs, setting the scale of the computed PSFs so 
+that the intensity of one of them is equal to the corresponding experimental 
+image (the calculations should either include the background or it should be 
+removed for the data just for his step), and then setting the photobleaching 
+amplitudes equal to the ratio between the total intensity of the data and 
+the modeled PSFs. 
 
-As a lost point, it should be mentioned that the Jones matrix of the birefringent mask should be well characterized. In the case being treated here, this means that the radial parameter $c$ and the orientation set by the angle $\phi_0$ are known. They are measured from images of the pupil. Note that, if one desires, this parameters could be added to the phase retrieval algorithm by adding another branch in the forward and backward models.
+As a lost point, it should be mentioned that the Jones matrix of the 
+birefringent mask should be well characterized. In the case being treated 
+here, this means that the radial parameter $c$ and the orientation set by 
+the angle $\phi_0$ are known. They are measured from images of the pupil. 
+Note that, if one desires, this parameters could be added to the phase 
+retrieval algorithm by adding another branch in the forward and backward models.
 
-\section{Alternative decomposition for the aberration matrix}
 
-\subsection{Unitary decomposition}
+\section{Characterization of }
 
-Another useful decomposition for the aberration Jones matrix is based on the assumption that the aberrations mostly conserve energy. Thus the aberration matrix can be written as
-\begin{align*}
-\bt J_\text{A}(\bt u) =&A(\bt u ) e^{\im 2 \pi W(\bt u) } \left[ q_0(\bt u)\bs \sigma_0+  \im \sum_{j=1}^3 q_j (\bt u)   \bs \sigma_j \right]\\
-= & 
-A(\bt u ) e^{\im 2 \pi W(\bt u) } \\
-& \times
-\left(
-\begin{array}{cc}
-q_0 (\bt u)  + \im q_3 (\bt u) & q_2(\bt u) + \im q_1(\bt u)   \\
--q_2 (\bt u) + \im q_1 (\bt u)  & q_0(\bt u) - \im q_3(\bt u) 
-\end{array}
-\right),
-\end{align*}
-which is a unitary matrix if we set
-\begin{align}
-q_0(\bt u) = \sqrt{1-\sum_{j=1}^3 q_j^2(\bt u)},
-\end{align}
-and  for which the total transmission can vary through the amplitude term $A(\bt u )$. This decomposition is equivalent to considering another birefringent mask followed by a scalar one. 
-
-In this case, the amplitude $A$, the phase $\Phi $, and the coefficients $q_j$ will be assumed to be real. This allows the implementation of unitary birefringent masks.  Expanding  them in terms of the Zernike polynomials,
-\begin{align}
-A (\bt u) = &\sum_l c_{l}^{(A)}Z_l(\bt u/u_\text{max}) ,\\
-W(\bt u) = &\sum_l c_{l}^{(W)}Z_l(\bt u/u_\text{max}) ,\\
-q_{j} (\bt u) = &\sum_l c_{l}^{(j)}Z_l(\bt u/u_\text{max}),
-\end{align}
-where we used the single index notation for the basis. In the decomposition of  $\Phi$ the Zernike polynomials corresponding to piston and defocus are again  dropped. Note that the $q_0$ parameter is then fixed by the others through the unitarity condition.
-
-\subsection{Forward model}
-
-Given that these changes only affect the computation of the Jones matrix for the aberrations, only the steps 1 through 3 of the branch ``a'' need to be changed by
-\begin{enumerate}
-\item Compute the amplitude, phase and $q_j$ coefficients
-\begin{align*}
-A (\bs \ell) = &\sum_l c_{l}^{(A)}Z_l(\bs \ell) ,\\
-W(\bs \ell) = &\sum_l c_{l}^{(W)}Z_l(\bs \ell) ,\\
-q_{j} (\bs \ell) = &\sum_l c_{l}^{(j)}Z_l(\bs \ell).
-\end{align*}
-\item Compute the scalar and matrix parts
-\begin{align*}
- \Gamma (\bs \ell)  = &A(\bs \ell)  e^{\im 2 \pi  W (\bs \ell)  },\\
-\bt Q (\bs \ell) = & \left(
-\begin{array}{cc}
-q_0 (\bs \ell)  + \im q_3 (\bs \ell) & q_2(\bs \ell) + \im q_1(\bs \ell)   \\
--q_2 (\bs \ell) + \im q_1 (\bs \ell)  & q_0(\bs \ell) - \im q_3(\bs \ell) 
-\end{array}
-\right) ,
-\end{align*}
-where
-\begin{align*}
-q_0 (\bs \ell)  = & \sqrt{1-\sum_{j=1}^3 q_j^2(\bs \ell)}.
-\end{align*}
-\item Compute the Jones matrix of the aberrations
-\begin{align*}
-\bt J_\text{A}(\bs \ell) 
-=& \Gamma (\bs \ell) \bt Q (\bs \ell).
-\end{align*}
-\end{enumerate}
-
-\subsection{Gradient computations}
-
-The changes of the forward model need to be accompanied by changes in the gradient computation. Steps 8 to 10 of the main branch ``a'' need to be substituted by
-\begin{enumerate}
-\item[8.] Gradient with respect to the Pauli expansion coefficients
-\begin{align*}
-\bar  \Gamma (\bs \ell) =& \sum_{i,j = x,y}  Q_{ij}^*(\bs \ell) \bar{J}_{A,ij} (\bs \ell),\\
-\bar{ \bt Q } (\bs \ell) =& \Gamma^* (\bs \ell) \bar{\bt J}_A (\bs \ell) .
-\end{align*}
-\item[9.] Gradient with respect to the amplitude and phase or real and imaginary parts of the Pauli coefficients
-\begin{align*}
-\bar A(\bs \ell) =&   \text{Re} \left\{ \bar \Gamma (\bs \ell)  \exp \left[ -\im 2 \pi \sum_l c_{l}^{(W)} Z_l(\bs \ell) \right] \right\} ,\\
-\bar W(\bs \ell)=& 2\pi \text{Im}\left\{\bar \Gamma (\bs \ell)  \Gamma^*(\bs \ell)  \right\} , \\
-\bar q_1 (\bs \ell) =& \text{Im} \left\{ \bar Q_{x,y}(\bs \ell) + \bar Q_{y,x}(\bs \ell)\right\} - \frac{\bar q_0(\bs \ell)}{q_0(\bs \ell)} q_1(\bs \ell),\\
-\bar q_2 (\bs \ell) =& \text{Re} \left\{ \bar Q_{x,y}(\bs \ell) - \bar Q_{y,x}(\bs \ell)\right\} - \frac{\bar q_0(\bs \ell)}{q_0(\bs \ell)} q_2(\bs \ell), \\
-\bar q_3 (\bs \ell) =&\text{Im} \left\{\bar Q_{x,x}(\bs \ell) - \bar Q_{y,y}(\bs \ell)  \right\} - \frac{\bar q_0(\bs \ell)}{q_0(\bs \ell)} q_3(\bs \ell) .
-\end{align*}
-where
-\begin{align*}
-\bar q_0 (\bs \ell) =&  \text{Re} \left\{ \bar Q_{x,x}(\bs \ell)+\bar Q_{y,y}(\bs \ell) \right\} .
-\end{align*}
-\item[10.] Gradient with respect to the Zernike expansion coefficients 
-\begin{align*}
-\bar c^{(A)} = &  \sum_{\bs \ell} \bar A(\bs \ell) Z_l(\bs \ell), \\
-\bar c_{l}^{(W)} = & \sum_{\bs \ell} \bar W (\bs \ell) Z_l(\bs \ell), \\
-\bar c_{l}^{(j)} = & \sum_{\bs \ell}  \bar q_j (\bs \ell) Z_l(\bs \ell) .
-\end{align*}
-\end{enumerate}
 
 
 %\section{Numerical simulations}
