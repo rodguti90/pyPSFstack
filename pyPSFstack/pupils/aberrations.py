@@ -33,14 +33,15 @@ class UnitaryAberrations(Pupil):
     def get_pupil_array(self): 
 
         x, y = self.xy_mesh()
+        N_pts = x.shape[0]
         zernike_seq = zernike_sequence(np.max(self.jmax_list), 
                                         self.index_convention, 
                                         x/self.aperture_size, 
                                         y/self.aperture_size)
         # Computes the unitary decomposition matrix and scalar terms         
         #initialize the matrix term   
-        Q = np.zeros((self.N_pts,self.N_pts,2,2), dtype=np.cfloat)
-        qs = np.zeros((self.N_pts,self.N_pts,4))  
+        Q = np.zeros((N_pts,N_pts,2,2), dtype=np.cfloat)
+        qs = np.zeros((N_pts,N_pts,4))  
         cum_j = 0           
         #Compute the qs
         for k in range(4):
@@ -60,7 +61,7 @@ class UnitaryAberrations(Pupil):
         W = np.sum(zernike_seq[...,1:self.jmax_list[4]] * temp, axis = 2)
         cum_j += self.jmax_list[1]-2 
         #Compute the scalar term
-        Gamma = np.empty((self.N_pts,self.N_pts,1,1), dtype=np.cfloat)
+        Gamma = np.empty((N_pts,N_pts,1,1), dtype=np.cfloat)
         Gamma[...,0,0] = np.exp(1j * 2 * np.pi * W)
         
         return Gamma * Q        

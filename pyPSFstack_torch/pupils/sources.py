@@ -3,7 +3,49 @@ import torch.nn as nn
 
 import numpy as np
 
-from .functions import xy_mesh
+from ..pupil import torchSource
+
+
+class torchDipoleInterfaceSource(torchSource):
+
+    def __init__(self, aperture_size=1, computation_size=4., 
+                 N_pts=128, ni=1.33, nf=1.518, delta=0.1, 
+                 alpha=None, optimize_delta=False
+                 ):
+        super(torchDipoleInterfaceSource, self).__init__(aperture_size, computation_size, N_pts)
+
+        # self.alpha = nn.Parameter(torch.tensor((nf/ni)**3, requires_grad=True, dtype=torch.float))
+        if alpha is None:
+            alpha = (nf/ni)**3
+        self.alpha = nn.Parameter(torch.tensor(alpha, requires_grad=True, dtype=torch.float))
+        
+        if optimize_delta:
+            self.delta =nn.Parameter(torch.tensor(delta, requires_grad=True, dtype=torch.float))
+        else:
+            self.delta = torch.tensor(delta, dtype=torch.float)
+        self.ni = ni
+        self.nf = nf
+        
+
+    def get_pupil_array(self):
+
+        ux, uy = self.xy_mesh()
+        ur, _ = self.polar_mesh()
+        saf_defocus = compute_SAF_defocus(ur.type(torch.cfloat), 
+            self.ni, self.nf, self.delta, self.alpha) 
+        green = compute_green(ux, uy, self.ni, self.nf)
+        aperture = self.get_aperture()
+        return aperture * saf_defocus * green  
+
+
+def compute_SAF_defocus(ur, ni, nf, delta, alpha):
+    N_pts = ur.shape[0]
+    saf_defocus = torch.empty((N_pts,N_pts,1,1), dtype=torch.cfloat)
+        
+    saf_defocus[...,0,0] =  torch.exp(1j*2*np.pi*nf*delta
+                        *((ni/nf)*(1-(ur*nf/ni)**2)**(1/2)
+                        -alpha*(1-ur**2)**(1/2)))
+    return saf_defocus
 
 def compute_green(ux, uy, ni, nf):
     
@@ -41,36 +83,3 @@ def compute_green(ux, uy, ni, nf):
     green_mat = green_mat / con_en
     return green_mat
 
-class DipoleInterfaceSource(nn.Module):
-
-    def __init__(self, aperture_size=.99, computation_size=4., 
-                 N_pts=128, ni=1.33, nf=1.518, delta=0.1
-                 ):
-        super(DipoleInterfaceSource, self).__init__()
-
-        # self.alpha = nn.Parameter(torch.tensor((nf/ni)**3, requires_grad=True, dtype=torch.float))
-        self.alpha = torch.tensor((nf/ni)**3)
-        
-        self.delta =nn.Parameter(torch.tensor(delta, requires_grad=True, dtype=torch.float))
-        
-        self.ni = ni
-        self.nf = nf
-        
-        step = computation_size/N_pts
-        # Limit the pupil to the maximum region of one to avoid wasting memory
-        ux, uy = xy_mesh(2, step)
-        self.N_pupil = ux.shape[0]
-        self.ur2 = torch.empty((self.N_pupil,self.N_pupil), dtype=torch.cfloat)
-        self.ur2[...] = ux**2 + uy**2
-        aperture = self.ur2.type(torch.float) <= aperture_size**2
-        self.green = aperture[...,None,None] * compute_green(ux, uy, ni, nf)
-
-    def forward(self):
-
-        saf_defocus = torch.empty((self.N_pupil,self.N_pupil,1,1), dtype=torch.cfloat)
-        
-        saf_defocus[...,0,0] =  torch.exp(1j*2*np.pi*self.nf*self.delta
-                            *((self.ni/self.nf)*(1-self.ur2*(self.nf/self.ni)**2)**(1/2)
-                            -self.alpha*(1-self.ur2)**(1/2)))   
-        
-        return self.green * saf_defocus

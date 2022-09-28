@@ -2,9 +2,12 @@ from math import factorial
 import torch
 import numpy as np
 
-from .functions import cart2pol
 
 
+def cart2pol(x,y):
+    rho = torch.sqrt(x**2 + y**2)
+    phi = torch.atan2(y, x)
+    return rho, phi
 
 def radial_zernike(n,m,rho):
     #check that n-m is even
