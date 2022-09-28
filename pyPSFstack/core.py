@@ -69,10 +69,10 @@ class PSFStack():
         if N_pts is None:
             N_pts = self.N_pts
         
-        stack = trim_stack(self.psf_stack, N_pts)
+        stack = trim_stack(self.psf_stack.copy(), N_pts)
        
         if norm=='average':
-            ave = np.mean(np.sum(stack, axes=(0,1)))
+            ave = np.mean(np.sum(stack, axis=(0,1)))
             stack /= ave
         elif norm=='max':
             max_value = np.max(stack)

@@ -55,7 +55,7 @@ class ExactBlurring(Blurring):
     def compute_blurred_psfs(self, input, orientation):
         output = self._compute_intensity(input, orientation)
         output = self.bk.forward(output)
-        return output
+        return np.abs(output)
 
 class BKSphere(BlurringKernel):
     def __init__(self, 
