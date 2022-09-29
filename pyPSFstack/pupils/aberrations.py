@@ -18,12 +18,16 @@ class UnitaryAberrations(Pupil):
     amplitudes) and the piston and defocus terms of the scalar phase are ommitted.
     '''
     def __init__(self, c_W, c_q, aperture_size=1., computation_size=4., 
-                 N_pts=128, jmax_list=[15]*5, index_convention='fringe'):
+                 N_pts=128, index_convention='fringe'):
         
         Pupil.__init__(self, aperture_size, computation_size, N_pts)
         
-        assert len(jmax_list) == 5
-        self.jmax_list = jmax_list
+        # assert len(jmax_list) == 5
+        # self.jmax_list = jmax_list
+        self.jmax_list = []
+        for i in range(4):
+            self.jmax_list += [len(c_q[i])]
+        self.jmax_list += [len(c_W)+2]
         self.c_q = c_q
         self.c_W = c_W
         self.index_convention = index_convention
@@ -41,13 +45,11 @@ class UnitaryAberrations(Pupil):
         # Computes the unitary decomposition matrix and scalar terms         
         #initialize the matrix term   
         Q = np.zeros((N_pts,N_pts,2,2), dtype=np.cfloat)
-        qs = np.zeros((N_pts,N_pts,4))  
-        cum_j = 0           
+        qs = np.zeros((N_pts,N_pts,4))   
         #Compute the qs
         for k in range(4):
             qs[...,k] = np.sum(zernike_seq[...,:self.jmax_list[k]] 
-                * self.c_q[k], axis=2)                   
-            cum_j += self.jmax_list[k]   
+                * self.c_q[k], axis=2)        
         #Compute the matrix term    
         Q[...,0,0] = qs[...,0] + 1j * qs[...,3]
         Q[...,0,1] = qs[...,2] + 1j * qs[...,1]
@@ -59,7 +61,7 @@ class UnitaryAberrations(Pupil):
         temp = np.hstack((self.c_W[:self.defocus_j-1], [0],
              self.c_W[self.defocus_j-1:]))     
         W = np.sum(zernike_seq[...,1:self.jmax_list[4]] * temp, axis = 2)
-        cum_j += self.jmax_list[1]-2 
+        
         #Compute the scalar term
         Gamma = np.empty((N_pts,N_pts,1,1), dtype=np.cfloat)
         Gamma[...,0,0] = np.exp(1j * 2 * np.pi * W)

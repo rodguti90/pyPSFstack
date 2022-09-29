@@ -20,9 +20,6 @@ class PSFStack():
         self.pdiversity = pdiversity
         self.blurring = blurring
 
-    def set_ddiversity(self, ddiversity):
-        self.ddiversity = ddiversity
-
     def compute_psf_stack(self, orientation=[0,0,0]):
         output = self._compute_compound_pupils()
         # diversities can be added to pupil sequence
