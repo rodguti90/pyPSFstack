@@ -4,9 +4,8 @@ import torch.fft as fft
 from ..pupil import torchBirefringentWindow
 import numpy as np
 
-from ..functions import xy_mesh, polar_mesh
 
-class SEO(torchBirefringentWindow):
+class torchSEO(torchBirefringentWindow):
 
     def __init__(self, aperture_size=1., computation_size=4., 
                  N_pts=128, c=1.24*np.pi

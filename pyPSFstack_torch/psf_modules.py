@@ -3,35 +3,50 @@ import torch.nn as nn
 import torch.fft as fft
 import numpy as np
 
-from .pupils.sources import torchDipoleInterfaceSource
-from .pupils.windows import SEO
-from .pupils.aberrations import torchUnitaryAberrations
-# from .diversities.diversities import PDiversity#, ZDiversity
-from .diversities.pupil_diversities import torchZDiversity
 from .functions import crop_center
 
 class torchPSFStack(nn.Module):
 
     def __init__(self,
-                 pupils,
+                 N_data,
+                 pupils,                
                  zdiversity=None,
-                 pdiversity=None,
+                 pdiversity=None
                  ):
         super(torchPSFStack, self).__init__()
         
-        self.pupils = pupils
+        self.N_data = N_data
+        self.pupils = nn.ModuleList(pupils)
         self.zdiversity = zdiversity
         self.pdiversity = pdiversity
+        
         self.N_pupils = len(self.pupils)
         self.N_pts = self.pupils[0].N_pts
+        
+        self.pb_bck = None
+        self.scale_factor = 1
 
-    def forward(self, N_data):
+    def set_pb_bck(self, bck, opt_a=False):
+        div_shape = []
+        if self.zdiversity is not None:
+            div_shape += [self.zdiversity.N_zdiv]
+        if self.pdiversity is not None:
+            div_shape += [self.pdiversity.N_pdiv]
+        self.pb_bck = PhotoBleachBackground(div_shape, 
+                                            b_est=bck,
+                                            opt_a=opt_a)
+
+    def set_scale_factor(self, scale_factor):
+        self.scale_factor = scale_factor
+
+    def forward(self):
 
         output = self.pupils[0]()
         for ind in range(self.N_pupils-1):
             output = self.pupils[ind+1](output)
 
-        output = self.zdiversity(output)
+        if self.zdiversity is not None:
+            output = self.zdiversity(output)
 
         output = fft.fftshift(
             fft.fft2(output,
@@ -39,152 +54,31 @@ class torchPSFStack(nn.Module):
                      s=(self.N_pts,self.N_pts)),
             dim=(0,1))/self.N_pts
 
-        output = crop_center(output, N_data)
+        output = crop_center(output, self.N_data)
 
         if self.pdiversity is not None:
             output = self.pdiversity.forward(output)
         output = torch.sum(torch.abs(output)**2,dim=(-2,-1))
+        
+        if self.pb_bck is not None:
+            output = self.pb_bck(output)
 
-        return output
+        return self.scale_factor * output
 
 class PhotoBleachBackground(nn.Module):
-    def __init__(self, sh, b_est=0):
+    def __init__(self, sh, b_est=0, opt_a=True):
+        super(PhotoBleachBackground, self).__init__()
+
         b = b_est * torch.ones(sh, dtype=torch.float)
         self.b = nn.Parameter(b, requires_grad=True)
-        self.a = nn.Parameter(torch.ones(sh, requires_grad=True, dtype=torch.float))
+        if opt_a:
+            self.a = nn.Parameter(torch.ones(sh, requires_grad=True, dtype=torch.float))
+        else:
+            self.a = 1
 
     def forward(self, input):
         return self.a * input + self.b
 
-# class torchPSFStack(nn.Module):
-
-#     def __init__(self,
-#                  pdiversity=None,
-#                  aperture_size=.99, 
-#                  computation_size=4., 
-#                  N_pts=128, 
-#                  ni=1.33, 
-#                  nf=1.518, 
-#                  delta=0.1,
-#                  jmax=[15]*5, 
-#                  index_convention='fringe', z_list=None
-#                  ):
-#         super(torchPSFStack, self).__init__()
-        
-#         self.N_pts = N_pts
-
-#         self.source = torchDipoleInterfaceSource(
-#             aperture_size=aperture_size,
-#             computation_size=computation_size, 
-#             N_pts=N_pts, 
-#             ni=ni, 
-#             nf=nf, 
-#             delta=delta)
-
-#         self.aberrations = torchUnitaryAberrations(
-#             aperture_size=aperture_size, 
-#             computation_size=computation_size, 
-#             N_pts=N_pts, 
-#             jmax=jmax, 
-#             index_convention=index_convention)
-
-#         self.zdiversity = torchZDiversity(z_list,
-#             aperture_size=aperture_size, 
-#             computation_size=computation_size, 
-#             N_pts=N_pts, 
-#             nf=nf)
-
-#         self.pdiversity = pdiversity
-
-#     def forward(self, N_data):
-
-#         input = self.source()
-#         input = self.aberrations(input)
-#         input = self.zdiversity(input)
-#         input = fft.fftshift(
-#             fft.fft2(input,
-#                      dim=(0,1),
-#                      s=(self.N_pts,self.N_pts)),
-#             dim=(0,1))
-
-#         input = crop_center(input, N_data)
-
-#         if self.pdiversity is not None:
-#             input = self.pdiversity.forward(input)
-#         output = torch.sum(torch.abs(input)**2,dim=(-2,-1))
-
-#         return output
-
-
-
-class IncoherentPSF(nn.Module):
-
-    def __init__(self,
-                 pdiversity=None,
-                 aperture_size=.99, 
-                 computation_size=4., 
-                 N_pts=128, 
-                 ni=1.33, 
-                 nf=1.518, 
-                 delta=0.1,
-                 c=1.24*np.pi,
-                 jmax=[15]*5, 
-                 index_convention='fringe',
-                 z_list=None
-                 ):
-        super(IncoherentPSF, self).__init__()
-        
-        self.N_pts = N_pts
-
-        self.source = DipoleInterfaceSource(
-            aperture_size=aperture_size,
-            computation_size=computation_size, 
-            N_pts=N_pts, 
-            ni=ni, 
-            nf=nf, 
-            delta=delta)
-
-        self.window = SEO(aperture_size=aperture_size, 
-                          computation_size=computation_size, 
-                          N_pts=N_pts, 
-                          c=c)
-
-        self.aberrations = UnitaryPolarizationAberrations(
-            aperture_size=aperture_size, 
-            computation_size=computation_size, 
-            N_pts=N_pts, 
-            jmax=jmax, 
-            index_convention=index_convention)
-
-        self.zdiversity = torchZDiversity(z_list,
-            aperture_size=aperture_size, 
-            computation_size=computation_size, 
-            N_pts=N_pts, 
-            nf=nf)
-
-        self.pdiversity = PDiversity(pol_analyzer, angle_list=angle_list)
-
-    def forward(self, N_data):
-
-        input = self.source()
-        input = self.window(input)
-        input = self.aberrations(input)
-        input = self.zdiversity(input)
-        input = fft.fftshift(
-            fft.fft2(input,
-                     dim=(0,1),
-                     s=(self.N_pts,self.N_pts)),
-            dim=(0,1))
-        # input = fft.fftshift(
-        #     fft.fft2(fft.ifftshift(input,dim=(0,1)),
-        #              dim=(0,1),
-        #              s=(self.N_pts,self.N_pts)),
-        #     dim=(0,1))
-        input = crop_center(input, N_data)
-        input = self.pdiversity(input)
-        output = torch.sum(torch.abs(input)**2,dim=(-2,-1))
-
-        return output
 
 
 
