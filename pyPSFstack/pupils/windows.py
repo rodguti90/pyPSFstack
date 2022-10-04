@@ -42,6 +42,27 @@ class SEOQuarter(BirefringentWindow):
         seo = jones_seo(ur, uphi, c=self.c)
         return self.get_aperture() * (jones_qwp(self.theta) @ seo)
 
+class Qplate(BirefringentWindow):
+    def __init__(self, aperture_size = 1., computation_size=4., 
+                 N_pts=128, q=1, alpha=0):
+        BirefringentWindow.__init__(self, aperture_size, computation_size, N_pts)
+        self.q = q
+        self.alpha = alpha
+
+    def get_pupil_array(self):
+        _, uphi = self.polar_mesh()
+        return self.get_aperture() * jones_qplate(uphi, self.q, self.alpha)
+
+
+def jones_qplate(uphi, q, alpha):
+    ny, nx = uphi.shape
+    jones_mat = np.empty((ny,nx,2,2), dtype=np.cfloat)
+    theta = q*uphi + alpha
+    jones_mat[...,0,0] = 1j*np.cos(2*theta)
+    jones_mat[...,0,1] = 1j*np.sin(2*theta)
+    jones_mat[...,1,0] = -np.conj(jones_mat[...,0,1])
+    jones_mat[...,1,1] = np.conj(jones_mat[...,0,0])
+    return jones_mat
 
 def jones_seo(ur, uphi, c=1.24*np.pi):
     ny, nx = ur.shape
