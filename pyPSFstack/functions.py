@@ -1,6 +1,5 @@
 import numpy as np
 from colorsys import hls_to_rgb
-import numpy as np
 # from scipy.optimize import minimize
 # from skimage.morphology import erosion, dilation
 
