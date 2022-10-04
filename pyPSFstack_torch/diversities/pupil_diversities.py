@@ -13,14 +13,15 @@ class torchZDiversity(torchPupilDiversity):
                  
         super(torchZDiversity, self).__init__(aperture_size, computation_size, N_pts)
         
-        self.z_list = torch.reshape(torch.tensor(z_list), (1,1,-1))
+        self.z_list = torch.reshape(torch.tensor(list(z_list)), (1,1,-1))
         self.N_zdiv = len(z_list)
         self.nf = nf  
 
     def get_pupil_array(self):
         ur, _ = self.polar_mesh()
         ur = (ur[...,None]).type(torch.cfloat)
-        return torch.exp(1j*2*torch.pi*self.nf*self.z_list*(1-ur**2)**(1/2))
+        zdiv = torch.exp(1j*2*torch.pi*self.nf*self.z_list*(1-ur**2)**(1/2))
+        return zdiv.type(torch.cfloat)
     
 class torchDDiversity(torchPupilDiversity):
 
