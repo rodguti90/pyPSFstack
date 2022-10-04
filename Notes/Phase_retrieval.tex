@@ -38,7 +38,7 @@ amsmath,amssymb]{revtex4-1}
 \graphicspath{{figures/},{../figures/}} % specifies the path for the figures
 \allowdisplaybreaks
 
-\title{Characterizing the polarization aberrations in widefield fluorescence microscopy using phase retrieval}
+\title{Characterizing birefringent pupils in widefield fluorescence microscopy using phase retrieval}
 
 \author{R. Guti\'{e}rrez-Cuevas}
 \email{rodrigo.gutierrez-cuevas@fresnel.fr}
@@ -515,115 +515,46 @@ to make sense we need to use as $I^{(\zeta ,p)}_\text{exp}$ the values that
 actually follows the assumed distribution. In general this means that the images
 should not be denoised and that the offset of the camera should be removed.
 A detailed description for the forward model can be found in the Supplementary 
-Information. 
+Information as well as other considerations that need to be taken into account 
+before launching the optimization routine. 
 
 
 \section{Numerical experiments}
 
-\subsection{Initial considerations}
-
 To exemplify the implementation of the phase retrieval algorithm, 
-let us consider the setup used for CHIDO. In this case the birefringent 
-window is composed of a stress engineered optical (SEO) element followed by 
-a quarter-wave plate at $45^{\circ}$. Afterwards, the light is separated into 
-its $x$ and $y$ linear polarization components with a Wollaston prism which are 
-then measured by the camera. This same setup can be used to obtain the necessary 
-ZP stack for the phase retrieval algorithm by taking the SEO as the birefringent 
-mask given by the Jones matrix
-\begin{align}
-\bt J_\text{SEO} (\bt u) = & \cos \frac{c u}{2}
-\left( \begin{array}{cc}
-1 & 0 \\
-0 & 1 
-\end{array}
-\right)
-+ \im \sin \frac{c u}{2}
-\left( \begin{array}{cc}
-\cos \phi & -\sin \phi \\
-\sin \phi & - \cos \phi 
-\end{array}
-\right),
-\end{align}
-and the quarter-wave plate along with the Wollaston as the polarization analyzer.  To increase the number of polarization diversities, the quarter-wave plate will be allowed to be placed at various angles. This combination defines the polarization diversity Jones matrices through
-\begin{align}
-\bt P^{(p)} = \left\{ \begin{array}{c}
-\left(
-\begin{array}{cc}
-1 & 0 \\
-0 & 0 
-\end{array}
-\right) \\
-\left(
-\begin{array}{cc}
-0 & 0 \\
-0 & 1 
-\end{array}
-\right) 
-\end{array}
-\right\}
-\cdot
-{\begin{pmatrix}\cos ^{2}\theta_p +i\sin ^{2}\theta_p &(1-i)\sin \theta_p \cos \theta_p \\(1-i)\sin \theta_p \cos \theta_p &\sin ^{2}\theta_p +i\cos ^{2}\theta_p \end{pmatrix}}
-\end{align}
-where $\theta_p$ is the angle of the fast axis with respect to the $x$ axis.
-Having defined the polarization diversity, the ZP stack can be acquired by 
-taking images of the PSFs for all the polarization diversity at various 
-focal planes. Note that before using these images for the retrieval of the 
-aberrations and the other parameters, they need to be processed so that they 
-follow the assumed statistics. This is done by converting the value at each 
-pixel from the arbitrary gray scale value to the number of photocount events. 
-In most cases, an offset value needs to be removed (if any pixel has a 
-negative value then it should be set to zero), and then the gray value 
-should be converted to the number of photoelectrons. 
-
-Before being able to launch the phase retrieval, all the parameters that are 
-going to be estimated need to be provided with an initial value. For the 
-Zernike coefficients, the simplest choice is to set all equal to zero except 
-the first coefficient of $A_0{(A)}$ which reduces the aberration matrix 
-to the identity.
- 
-Depending on the particular type of sample used for acquiring the ZPstack, the 
-distance to the coverslip might be estimated. For example, if the emitters are 
-fixed at the surface of the coverslip then $d_\text{cs}$ is equal to the radius 
-of the nanobead or if they are attached to a macro sphere, $d_\text{cs}$ can be 
-estimated by the radial distance of the emitter from the center of the 
-macrosphere. When $d_\text{cs}$ cannot be estimated from the sample, if the 
-setup allows imaging the pupil $d_\text{cs}$ can be estimated from the 
-exponential decay of the SAF radiation. Otherwise, an initial value not 
-much greater to the nanobead's radius should work fine. 
-
-For the parameter setting the distance of the best focus in terms of 
-$d_\text{cs}$ there are several options. If, experimentally, there is a 
-particular criteria to choose the best focus, e.g. the smallest rms width 
-of the PSFs, then the same one could be used to define it. However, if the 
-best focus is defined experimentally ``by eye'' then there are several 
-sensible options, such as the parameter that  sets the second derivative 
-of the defocus and SAF wavefront equal to zero or that the average of the 
-first derivative is zero. It should be noted that in general this parameter 
-should be greater than the one used for the paraxial focus sin the PSF 
-quickly degrades as we move away from and closer to the coverslip but not 
-when we move to the other side. 
-
-The background illumination can be estimated directly form the images in 
-the experimental ZP stack by averaging the pixels in the corners of each 
-PSF image or in an empty region close to the nanobead being analyzed. 
-Finally for the phobleaching coefficients, they could all be set equal 
-to zero if the effect is negligible. Otherwise, they can be estimated 
-numerically computing the PSFs, setting the scale of the computed PSFs so 
-that the intensity of one of them is equal to the corresponding experimental 
-image (the calculations should either include the background or it should be 
-removed for the data just for his step), and then setting the photobleaching 
-amplitudes equal to the ratio between the total intensity of the data and 
-the modeled PSFs. 
-
-As a lost point, it should be mentioned that the Jones matrix of the 
-birefringent mask should be well characterized. In the case being treated 
-here, this means that the radial parameter $c$ and the orientation set by 
-the angle $\phi_0$ are known. They are measured from images of the pupil. 
-Note that, if one desires, this parameters could be added to the phase 
-retrieval algorithm by adding another branch in the forward and backward models.
+two main phase masks will be considered: (2) a stress-engineered optical 
+(SEO) element \cite{} and (3) an s-plate \cite{}. Both have been used in practice to measure
+the position and orientation of dipolar emitters \cite{}. All the modelled
+data stacks are computed using \texttt{pyPSFstack} which allows
+computing the PSF stack with phase and polarization diversities, and can 
+compute the three-dimensional blurring due to the size of the fluorescing
+nano-bead. It can also simulate the effect of the background illumination
+and noise. The polarization diversity will be taken as the Jones matrix
+given by a quarter-wave plate at various angles followed by a horizontal or 
+vertical linear polarizer. This choice is inspired by the setup used in \cite{}
+where the SEO is followed by a quarter-wave plate and then a Wollaston
+prism separates the two linearly-polarized components. 
 
 
-\section{Characterization of }
+\subsection{Polarization diversity VS more phase diversity}
+
+Let us first compare the use of polarization diversity when characterizing the 
+pupil from 
+
+The data is modelled assuming the source is a 20nm fluorescing nano-bead,
+with an average of 10000 photons hitting our detectors 
+per PSF to which we add 50 photons per pixel 
+as the background illumination. Noise following a Poisson distribution
+is then added to the images. Under these conditions, an image defocused by more 
+than 500nm past the nominal focal plane will be indistinguishable from noise. 
+Therefore, images are taken from -500nm to 500nm with a step size of 100nm. 
+
+
+\subsection{Incorporating blurring due to size to the pupil retrieval}
+
+\section{Characterizing the polarization aberrations in an experimental
+setup}
+
 
 
 
@@ -640,7 +571,12 @@ retrieval algorithm by adding another branch in the forward and backward models.
 %
 %\subsection{Scalar VS polarization aberrations}
 %
-%Our model allows us to turn off and on the coefficients used for the Zernike decomposition. In particular, the decomposition for the Jones matrix in terms of Pauli matrices allows us to consider purely scalar aberrations. Here, we explore how well purely scalar aberrations perform particularly when fitting high amounts of birefringent such as those used for PSF engineering. 
+%Our model allows us to turn off and on the coefficients used for the 
+% Zernike decomposition. In particular, the decomposition for the Jones 
+% matrix in terms of Pauli matrices allows us to consider purely scalar 
+% aberrations. Here, we explore how well purely scalar aberrations perform 
+% particularly when fitting high amounts of birefringent such as those used 
+% for PSF engineering. 
 %
 %
 %\subsection{•}
