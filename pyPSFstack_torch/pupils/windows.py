@@ -52,6 +52,29 @@ class torchSEO(torchBirefringentWindow):
         ur, uphi = self.polar_mesh()
         return self.get_aperture() * jones_seo(ur, uphi, c=self.c)
 
+class torchQplate(torchBirefringentWindow):
+
+    def __init__(self, aperture_size=1., computation_size=4., 
+                 N_pts=128, q=1, alpha=0
+                 ):
+        super(torchQplate, self).__init__(aperture_size, computation_size, N_pts)
+
+        self.q = nn.Parameter(torch.tensor(q, requires_grad=True, dtype=torch.float))
+        self.alpha = nn.Parameter(torch.tensor(alpha, requires_grad=True, dtype=torch.float))
+
+    def get_pupil_array(self):
+        ur, uphi = self.polar_mesh()
+        return self.get_aperture() * jones_seo(ur, uphi, c=self.c)
+
+
+def jones_qplate(uphi, q, alpha):
+    ny, nx = uphi.shape
+    pupil_array = torch.empty((ny,nx,2,2), dtype=torch.cfloat)
+    theta = q*uphi + alpha
+    pupil_array[...,0,0] = 1j*torch.cos(2*theta)
+    pupil_array[...,0,1] = 1j*torch.sin(2*theta)
+    pupil_array[...,1,0] = -torch.conj(pupil_array[...,0,1])
+    pupil_array[...,1,1] = torch.conj(pupil_array[...,0,1])
 
 def jones_seo(ur, uphi, c=1.24*np.pi):
     ny, nx = ur.shape
