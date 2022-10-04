@@ -25,7 +25,7 @@ class torchUnitaryAberrations(torchBirefringentWindow):
         self.index_convention = index_convention                  
         self.defocus_j = defocus_j(index_convention)
     
-    def forward(self, input):
+    def get_pupil_array(self):
         ux, uy = self.xy_mesh()
         N_pupil = ux.shape[0]
         zernike_seq = zernike_sequence(np.max(self.jmax), 
@@ -33,7 +33,7 @@ class torchUnitaryAberrations(torchBirefringentWindow):
                                         ux/self.aperture_size, 
                                         uy/self.aperture_size)
 
-        qs = torch.zeros((4,self.N_pupil,self.N_pupil),  dtype=torch.cfloat)
+        qs = torch.zeros((4,N_pupil,N_pupil),  dtype=torch.cfloat)
         for q_ind in range(4):
             qs[q_ind] = torch.sum(self.c_q[q_ind]*zernike_seq[...,:self.jmax[q_ind]],-1)
         Q = torch.zeros((N_pupil,N_pupil,2,2), dtype=torch.cfloat)
@@ -47,4 +47,4 @@ class torchUnitaryAberrations(torchBirefringentWindow):
                         self.c_W[self.defocus_j-1:],-1)
         Gamma = self.get_aperture(dummy_ind=0)*torch.exp(1j*2*np.pi*W)
 
-        return ( Gamma[...,None,None] * Q) @ input
+        return ( Gamma[...,None,None] * Q)
