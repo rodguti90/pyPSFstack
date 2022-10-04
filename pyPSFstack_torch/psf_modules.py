@@ -26,7 +26,7 @@ class torchPSFStack(nn.Module):
         self.pb_bck = None
         self.scale_factor = 1
 
-    def set_pb_bck(self, bck, opt_a=False):
+    def set_pb_bck(self, bck, opt_b=False, opt_a=False):
         div_shape = []
         if self.zdiversity is not None:
             div_shape += [self.zdiversity.N_zdiv]
@@ -34,14 +34,15 @@ class torchPSFStack(nn.Module):
             div_shape += [self.pdiversity.N_pdiv]
         self.pb_bck = PhotoBleachBackground(div_shape, 
                                             b_est=bck,
-                                            opt_a=opt_a)
+                                            opt_a=opt_a,
+                                            opt_b=opt_b)
 
     def set_scale_factor(self, scale_factor):
         self.scale_factor = scale_factor
 
     def forward(self):
 
-        output = self.pupils[0]()
+        output = self.scale_factor**(1/2) * self.pupils[0]()
         for ind in range(self.N_pupils-1):
             output = self.pupils[ind+1](output)
 
@@ -63,14 +64,17 @@ class torchPSFStack(nn.Module):
         if self.pb_bck is not None:
             output = self.pb_bck(output)
 
-        return self.scale_factor * output
+        return output
 
 class PhotoBleachBackground(nn.Module):
-    def __init__(self, sh, b_est=0, opt_a=True):
+    def __init__(self, sh, b_est=0, opt_b=True, opt_a=True):
         super(PhotoBleachBackground, self).__init__()
 
         b = b_est * torch.ones(sh, dtype=torch.float)
-        self.b = nn.Parameter(b, requires_grad=True)
+        if opt_b:
+            self.b = nn.Parameter(b, requires_grad=True)
+        else: 
+            self.b = b_est
         if opt_a:
             self.a = nn.Parameter(torch.ones(sh, requires_grad=True, dtype=torch.float))
         else:
