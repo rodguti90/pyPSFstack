@@ -18,7 +18,10 @@ class DipoleInterfaceSource(Pupil):
         self.nf = nf
         self.delta = delta
         if alpha is None:
-            self.alpha = (self.nf/self.ni)**3
+            nr = nf/ni
+            self.alpha = (140*nr + 42*nr**3 + 42*nr**5 + 15*nr**7)/(140 + 84*nr**2 + 15*nr**4)
+        else:
+            self.alpha = alpha
             
     def get_pupil_array(self):     
 
