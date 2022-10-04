@@ -16,13 +16,16 @@ class torchDipoleInterfaceSource(torchSource):
 
         # self.alpha = nn.Parameter(torch.tensor((nf/ni)**3, requires_grad=True, dtype=torch.float))
         if alpha is None:
-            alpha = (nf/ni)**3
-        self.alpha = nn.Parameter(torch.tensor(alpha, requires_grad=True, dtype=torch.float))
-        
-        if optimize_delta:
-            self.delta =nn.Parameter(torch.tensor(delta, requires_grad=True, dtype=torch.float))
+            nr = nf/ni
+            self.alpha = (140*nr + 42*nr**3 + 42*nr**5 + 15*nr**7)/(140 + 84*nr**2 + 15*nr**4)
         else:
-            self.delta = torch.tensor(delta, dtype=torch.float)
+            self.alpha = alpha
+        # self.alpha = nn.Parameter(torch.tensor(alpha, requires_grad=True, dtype=torch.float))
+        
+        # if optimize_delta:
+        #     self.delta =nn.Parameter(torch.tensor(delta, requires_grad=True, dtype=torch.float))
+        # else:
+        self.delta = torch.tensor(delta, dtype=torch.float)
         self.ni = ni
         self.nf = nf
         
