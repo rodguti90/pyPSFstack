@@ -6,10 +6,10 @@ Created on Sun Dec 19 18:35:07 2021
 @author: rodrigo
 """
 import numpy as np
-from ..pupil import Pupil
+from ..pupil import BirefringentWindow
 from .aberration_functions import zernike_sequence, defocus_j
 
-class UnitaryAberrations(Pupil):
+class UnitaryAberrations(BirefringentWindow):
     '''
     UnitaryAberrations defines a pupil composed of a general Jones matrix where its elements
     are expanded in terms of Zernike polynomials. 
@@ -20,7 +20,7 @@ class UnitaryAberrations(Pupil):
     def __init__(self, c_W, c_q, aperture_size=1., computation_size=4., 
                  N_pts=128, index_convention='fringe'):
         
-        Pupil.__init__(self, aperture_size, computation_size, N_pts)
+        BirefringentWindow.__init__(self, aperture_size, computation_size, N_pts)
         
         # assert len(jmax_list) == 5
         # self.jmax_list = jmax_list
