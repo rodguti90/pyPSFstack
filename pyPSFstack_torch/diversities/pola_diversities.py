@@ -20,6 +20,14 @@ class torchPDiversity_QWP(torchPDiversity):
     def get_jones_list(self, angles):
         return jones_qwp(angles)
 
+class torchPDiversity_HWP(torchPDiversity):
+
+    def __init__(self, angles):
+        torchPDiversity.__init__(self, angles)
+
+    def get_jones_list(self, angles):
+        return jones_hwp(angles)
+
 class torchPDiversity_LP(torchPDiversity):
 
     def __init__(self, angles):
@@ -60,6 +68,15 @@ def jones_lp(angles):
     jones[...,1,1] = torch.sin(theta)**2
     jones[...,1,0] = jones[...,0,1]
     return jones
+
+def jones_hwp(theta):
+    n_a = len(theta)
+    jones = torch.empty((n_a,2,2), dtype=torch.cfloat)
+    jones[...,0,0] = torch.cos(theta)**2 - torch.sin(theta)**2
+    jones[...,0,1] = 2*torch.sin(theta)*torch.cos(theta)
+    jones[...,1,1] = -jones[...,0,0]
+    jones[...,1,0] = jones[...,0,1]
+    return torch.exp(torch.tensor(-1j*torch.pi/2)) * jones
 
 def jones_gwp(angles, eta):
     theta = torch.tensor(angles)

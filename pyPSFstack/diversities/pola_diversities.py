@@ -20,6 +20,14 @@ class PDiversity_QWP(PDiversity):
     def get_jones_list(self, angles):
         return jones_qwp(angles)
 
+class PDiversity_HWP(PDiversity):
+
+    def __init__(self, angles):
+        PDiversity.__init__(self, angles)
+
+    def get_jones_list(self, angles):
+        return jones_hwp(angles)
+
 class PDiversity_LP(PDiversity):
 
     def __init__(self, angles):
@@ -57,6 +65,15 @@ def jones_lp(theta):
     jones[...,1,1] = np.sin(theta)**2
     jones[...,1,0] = jones[...,0,1]
     return jones
+
+def jones_hwp(theta):
+    n_a = len(theta)
+    jones =np.empty((n_a,2,2), dtype=complex)
+    jones[...,0,0] = np.cos(theta)**2 - np.sin(theta)**2
+    jones[...,0,1] = 2*np.sin(theta)*np.cos(theta)
+    jones[...,1,1] = -jones[...,0,0]
+    jones[...,1,0] = jones[...,0,1]
+    return np.exp(-1j*np.pi/2) * jones
 
 def jones_gwp(theta, eta):
     n_a = len(theta)
