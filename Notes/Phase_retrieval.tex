@@ -518,45 +518,91 @@ A detailed description for the forward model can be found in the Supplementary
 Information as well as other considerations that need to be taken into account 
 before launching the optimization routine. 
 
+\begin{figure}
+  \centering
+  \includegraphics[width=.9\linewidth]{stack.pdf}
+  \caption{\label{fig:stack} . }
+\end{figure}
 
 \section{Numerical experiments}
 
 To exemplify the implementation of the phase retrieval algorithm, 
-two main phase masks will be considered: (2) a stress-engineered optical 
-(SEO) element \cite{} and (3) an s-plate \cite{}. Both have been used in practice to measure
+two main birefringent masks will be considered: (2) a stress-engineered optical 
+(SEO) element \cite{} and (3) an s-plate \cite{}. 
+Both have been used in practice to measure
 the position and orientation of dipolar emitters \cite{}. All the modelled
 data stacks are computed using \texttt{pyPSFstack} which allows
 computing the PSF stack with phase and polarization diversities, and can 
 compute the three-dimensional blurring due to the size of the fluorescing
-nano-bead. It can also simulate the effect of the background illumination
+nano-bead. Figure \ref{fig:stack} shows as an example the stack used for 
+retrieving the SEO birefringent mask with both phase and polarization diversity. 
+It can also simulate the effect of the background illumination
 and noise. The polarization diversity will be taken as the Jones matrix
 given by a quarter-wave plate at various angles followed by a horizontal or 
 vertical linear polarizer. This choice is inspired by the setup used in \cite{}
 where the SEO is followed by a quarter-wave plate and then a Wollaston
 prism separates the two linearly-polarized components. 
 
-
 \subsection{Polarization diversity VS more phase diversity}
 
-Let us first compare the use of polarization diversity when characterizing the 
-pupil from 
+\begin{figure}
+  \centering
+  \includegraphics[width=.9\linewidth]{seo_ret.pdf}
+  \caption{\label{fig:seo_ret} . }
+\end{figure}
 
-The data is modelled assuming the source is a 20nm fluorescing nano-bead,
-with an average of 10000 photons hitting our detectors 
-per PSF to which we add 50 photons per pixel 
+\begin{figure}
+  \centering
+  \includegraphics[width=.9\linewidth]{qp_ret.pdf}
+  \caption{\label{fig:qp_ret} . }
+\end{figure}
+
+As a first example, we consider the retrieval of a birefringent mask with and without
+the use of polarization diversity. For this, the data is modelled assuming 
+the source is a 20nm fluorescing nanobead,
+with an average of 20000 photons hitting our detectors 
+per PSF to which we add 100 photons per pixel 
 as the background illumination. Noise following a Poisson distribution
-is then added to the images. Under these conditions, an image defocused by more 
-than 500nm past the nominal focal plane will be indistinguishable from noise. 
-Therefore, images are taken from -500nm to 500nm with a step size of 100nm. 
+is then added to the images. Note that the average number of photons on the 
+PSFs measured with polarization diversity is halved due to the presence of a linear 
+polarizer. Under these conditions, an image defocused by more 
+than 500nm past the nominal focal plane will be indistinguishable from noise 
+(see Fig.~\ref{fig:stack}). 
+Therefore, for the phase diversity images are taken from -500nm to 500nm of the 
+nominal focal plane with a step size of 100nm. For the polarization diversity, the 
+quarter wave-plate is rotated from $0$ to $3\pi/8$ with a step of $\pi/8$ and is
+then followed by a Wollaston prism which projects into horizontal and vertical 
+polarization.
 
+The results of the characterization are shown in Figs.~\ref{fig:seo_ret} 
+and \ref{fig:qp_ret}. These figures show the true Jones matrix along with the
+ones retrieved with and without polarization diversity, additionally they show the
+PSFs formed by dipoles oriented along the three Cartesian axes and an incoherent one. 
+The PSFs shown are modelled according to the standard configuration for each 
+birefringent mask, that is, for the SEO a QWP at 45${}^\circ$ is placed after the mask 
+and then a Wollaston prism projects onto the two linearly-polarized components while 
+for the s-plate only the Wollaston prism is used. The need to use polarization diversity
+to characterize birefringent masks becomes then evident, in both cases the retrieved
+pupil and the corresponding PSFs are quite different from the true ones when no
+polarization diversity is used whereas an accurate result is achieved in the other case.
+It is worth commenting on the differences between the true Jones matrix for the s-plate 
+and the one retrieved with polarization diversity. The deviation at the center comes 
+from the model that was chosen, since the s-plate is singular at the origin the Zernike
+polynomials struggle to reproduce this, nonetheless the corresponding PSFs are 
+indistinguishable from the true ones. The other noticeable difference is that the phase
+between the two columns is not the right one (they are $\pi/2$ out of phase). 
+This error can happen when the birefringent mask is real up to a global phase, since the
+resulting PSFs look the same and therefore the algorithm cannot distinguish between the 
+two.
 
-If the Birefringent pupil is real (up to a global phase) then one needs to choose
-carefully the polarization diversity in order to guarantee that
-teh appropriate superpositions are formed in order to get the phase relation 
-between all the compopnents. For example, when using a qwp we cannot dostinguish the
-phase betweent the two columns but if we used instead a hwp then we can.
 
 \subsection{Incorporating blurring due to size to the pupil retrieval}
+
+In order to showcase the implementation of blurring in our model, we now consider a 
+200nm fluorescent nanobead which produces blurred PSFs due to its size. Let us only treat 
+the SEO birefringent mask with the same choice of phase and polarization 
+diversities as before.
+
 
 \section{Characterizing the polarization aberrations in an experimental
 setup}
