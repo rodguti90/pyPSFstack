@@ -49,4 +49,28 @@ class DDiversity(PupilDiversity):
         return np.exp(1j*2*np.pi*self.diff_del_list*self.ni
                       *(1-(self.nf*ur/self.ni)**2)**(1/2)) 
 
+class DerivativeDiversity(PupilDiversity):
 
+    def __init__(self, 
+                 m=2, 
+                 ni=1.33, 
+                 nf=1.518, 
+                 aperture_size = 1., 
+                 computation_size=4., 
+                 N_pts=128):
+
+        PupilDiversity.__init__(self, aperture_size, computation_size, N_pts)
+        
+        self.N_derdiv = m+1
+        self.ni = ni
+        self.nf = nf  
+
+    def get_pupil_array(self):
+        ur, _ = self.polar_mesh()
+        nr, nc = ur.shape
+        ur = ur.astype(np.cfloat)
+        pupil_array = np.empty((nr,nc,self.N_derdiv), dtype=np.cfloat)
+        for l in range(self.N_derdiv):
+            pupil_array[...,l] = (1j*2*np.pi*self.ni*(1-(self.nf*ur/self.ni)**2)**(1/2))**l
+        
+        return pupil_array
