@@ -2,7 +2,7 @@
 import numpy as np
 from scipy.special import jv 
 from .functions import trim_stack
-from .blurring import NoBlurring
+from .blurring.blurring import NoBlurring
 # from .pupils.windows import NoPupil
 
 class PSFStack():
