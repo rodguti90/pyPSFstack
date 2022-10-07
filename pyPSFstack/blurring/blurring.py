@@ -1,7 +1,5 @@
 import numpy as np
-from scipy.special import jv 
 from math import factorial
-from ..pupil import BlurringKernel
 from ..diversities.pupil_diversities import NoDiversity, DDiversity, DerivativeDiversity
 from ..blurring.kernels import BKSphere, BKSASphere
 # from .core import PSFStack
