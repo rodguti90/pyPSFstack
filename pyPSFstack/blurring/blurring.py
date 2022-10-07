@@ -105,17 +105,21 @@ class SABlurring(Blurring):
         return np.abs(output)
 
     def _compute_intensity_der(self, input, orientation):
-        int_m = np.zeros_like(input)
-        if orientation != [0,0,0]:
-            input @ (np.array(orientation))
-            
+        
+        if orientation == [0,0,0]:
+            field_m = input
+        else:
+            field_m = input @ (np.array(orientation))
+        
+        int_m = np.zeros_like(field_m)
+
         for m in range(self.m_max+1):
             for l in range(m):
                 int_m[:,:,m,...] += (factorial(m)/(factorial(l)*factorial(m-l))) * \
-                    np.conj(input[:,:,l,...]) * np.conj(input[:,:,m-l,...])
+                    np.conj(field_m[:,:,l,...]) * np.conj(field_m[:,:,m-l,...])
+        
         if orientation == [0,0,0]:
             return np.sum(int_m, axis=(-2,-1))
         else:
-            field = int_m @ (np.array(orientation))
             return np.sum(int_m, axis=-1)
 
