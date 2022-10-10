@@ -126,7 +126,7 @@ accessible at \cite{}.
 % where we define a phase retrieval algorithm to retrieve the Jones matrix at 
 % the BFP that accounts for all the imperfections in the system. The approach 
 % is base on the assumptions of an incoherent point source, which is the case 
-% for fluorescing nanobeads used for most characterizations, and the use of 
+% for fluorescent nanobeads used for most characterizations, and the use of 
 % both phase and polarization diversities. The phase diversity is the standard 
 % approach of taking several images across several focal planes and the 
 % polarization diversity is obtained by using a polarization analyzer. Moreover, 
@@ -192,7 +192,7 @@ accessible at \cite{}.
 % where we define a phase retrieval algorithm to retrieve the Jones matrix at 
 % the BFP that accounts for all the imperfections in the system. The approach 
 % is base on the assumptions of an incoherent point source, which is the case 
-% for fluorescing nanobeads used for most characterizations, and the use of 
+% for fluorescent nanobeads used for most characterizations, and the use of 
 % both phase and polarization diversities. The phase diversity is the standard 
 % approach of taking several images across several focal planes and the 
 % polarization diversity is obtained by using a polarization analyzer. Moreover, 
@@ -209,13 +209,22 @@ accessible at \cite{}.
 \begin{figure*}
   \centering
   \includegraphics[width=.9\linewidth]{aplanatic.pdf}
-  \caption{\label{fig:setup} . }
+  \caption{\label{fig:setup} Schematic of the experimental setup for the 
+  collection and shaping of the emission by a source. (left) Schematic of the position 
+  source, in this case represented by a fluorescent nanobead, with respect
+  to the interface between the embedding medium of index of refraction
+  $n_i$ with the immersion medium of index of refraction $n_f$ used for 
+  the high-NA microscope objective and of the focal plane. (right) 
+  Schematic of the collection arm composed of a microscope objective (MO), 
+  followed by a birefringent mask (BM) and a polarization analyzer (PA). 
+  The light at the BFP is then focused onto the camera by the tube lens 
+  of focal length $f_\text{tl}$. }
 \end{figure*}
 
 The first step is to have the most accurate model for the propagation 
 of light through our microscope. As shown in Fig.~\ref{fig:aplanatic}, 
 the source is embedded in a medium of index of refraction $n_i$ at a 
-distance $d_{cs}>0$ from the interface with immersion oil of index of 
+distance $z_0$ from the interface with immersion oil of index of 
 refraction $n_f$, the interface is given by the coverslip which is assumed
 to be index matched to the immersion oil. For a dipolar source, the green 
 tensor at the back-focal plane (BFP) of a high-NA objective can be 
@@ -229,18 +238,12 @@ which  can contribute to more than
 half of the radiation reaching the detector \cite{hellen1987fluorescence,
 axelrod2001total,axelrod2013evanescent}.
 
-% \begin{figure}
-%   \centering
-%   \includegraphics[width=.9\linewidth]{aplanatic.pdf}
-%   \caption{\label{fig:aplanatic} . }
-%   \end{figure}
-
 Following \cite{lieb2004single,novotny2006principles} and assuming that 
 light propagates along the positive $\hat z$ direction, the Green tensor 
 at the BFP,
 \begin{align} \label{eq:G0}
-\bt G_0 (\bt u) = &   e^{-\im k n_f \bs \rho_o \cdot \bt u } 
-\exp \left[\im k n_i d_\text{cs} 
+\bt G (\bt u; \bt r_0) = &   e^{-\im k n_f \bs \rho_o \cdot \bt u } 
+\exp \left[\im k n_i |z_0| 
 \sqrt{1 - \left(\frac{n_f u}{n_i} \right)^2 } \right]  \nonumber \\
 & \times \exp \left(\im k n_f z_f \sqrt{1 - u^2} \right) \bt g (\bt u) ,
 \end{align}
@@ -254,15 +257,16 @@ g_{yx}  (\bt u)& g_{yy}  (\bt u)& g_{yz} (\bt u)
 \end{array}
 \right)
 \end{align}
-with the explicit form of  its components given in the Appendix,
-$\bs \rho_o =(x_o,y_o)$  denotes the transverse location of the dipole, 
-$k=2 \pi/\lambda$ is the wavenumber with $\lambda$ being the wavelength,
+with the explicit form of  its components given in the Appendix, 
+$\bt r_0=\bs \rho_0 + \hat{\bt z} z_0$ is the position of the source
+with $\bs \rho_0 =(x_0,y_0)$  denoting its transverse location, 
+$k=2 \pi/\lambda$ with $\lambda$ being the wavelength,
 and 
 $z_f$ is the location of the focal plane from the interface, $z_f<0$ 
 ($z_f>0$) if the focal plane is in the medium with index of refraction 
 $n_i$ ($n_f$). The vector 
 $\bt u = (u_x, u_y)$ denotes the normalized coordinates at the BFP, 
-see Fig.~\ref{fig:aplanatic}. The maximum value of $u = \norm{\bt u}$ is 
+see Fig.~\ref{fig:setup}. The maximum value of $u = \norm{\bt u}$ is 
 limited by the NA through $u_\text{max} = \text{NA}/n_f$. 
 The matrix elements $g_{ij}$ include the effect of the Fresnel coefficients 
 of the boundary and depend on $\bt u$ but not on the location of the dipole 
@@ -270,7 +274,7 @@ or the focal plane.  For a dipole oriented along the unit vector
 $\bs \mu = (\mu_x, \mu_y, \mu_z)$, the electric field distribution at the BFP 
 is given by 
 \begin{align}
-\bt E_{0} (\bt u) = \bt g (\bt u; \bt r_0) \cdot \bs \mu.
+\bt E (\bt u; \bt r_0) = \bt G (\bt u; \bt r_0) \cdot \bs \mu.
 \end{align}
 Therefore, the three columns of the Green tensor represent the field 
 distribution produced by a dipole along each of the three coordinate axes. 
@@ -298,14 +302,15 @@ for $j=1,2,3$, and a pure phase mask if also $q_0 =1$.
 After multiplying the Green tensor by this Jones matrix, the field  can then 
 be propagated form the BFP to the image plane through
 \begin{align}
-\bt G_\text{IP} (\bs \rho ) = \iint  \bt J_\text{M}(\bt u)  
-\cdot \bt G_0  (\pm \bt u) e^{- \im k  \frac{n_f \bs \rho}{M}  \cdot \bt u } \ud \bt u ,
+\bt G_\text{IP} (\tilde{\bs \rho}; \bt r_0 ) = \iint  \bt J_\text{M}(\bt u)  
+\cdot \bt G_0  (\pm \bt u,; \bt r_0) e^{- \im k  \frac{n_f \tilde{\bs \rho}}{M}  \cdot \bt u } \ud \bt u ,
 \end{align}
-where $M$ is the total magnification of the system. 
+where $\tilde{\bs \rho}$ denotes the transverse position at the image plane, and
+$M$ is the total magnification of the system. 
 Note that the normalized coordinate is defined at the location of the birefringent  mask.
 Assuming an incoherent source, the PSF is then given by
 \begin{align}
-  I_\text{IP} (\bs \rho) =  \norm{\bt G_\text{IP} }^2 
+  I_\text{IP} (\tilde{\bs \rho}; \bt r_0) =  \norm{\bt G_\text{IP} }^2 
   = \sum_{i=x,y} \sum_{j=x,y,z} |G_{\text{IP},ij}( \bt u)|^2.
 \end{align}
 
@@ -356,26 +361,27 @@ setting the coefficients $c^{(j)}_l=0$ for all $l$ and $j=1,2,3$.
 \subsection{Best focus and the distance to the coverslip}
 
 In general the position chosen as the nominal focus (or best focus) $z_f$ and 
-distance to the coverslip of the emitter $d_\text{cs} $ are not perfectly 
+distance to the coverslip of the emitter $z_0$ are not perfectly 
 known. Therefore,
 it is worth considering them as part of the optimization parameters that 
 will be estimated along with the coefficients of the Zernike decomposition 
 of the birefringent mask. The most obvious solution is to directly 
-use $z_f$ and $d_{\text{cs}}$ as parameters, however both phase 
+use $z_f$ and $z_0$ as parameters, however both phase 
 terms have similar effect when the 
 radial coordinate $u$ is below the SAF radiation and this might cause the 
 nonlinear optimization to fall into a local minimum which does not provide
 the real values.
 Moreover, the estimation 
 of the distance of the best focus $z_f$ will generally depend on the distance 
-of the nanobead from the coverslip. For example, if the paraxial 
+of the nanobead from the coverslip due to the spherical aberration
+produced by the planar interface. For example, if the paraxial 
 approximation is used then the distance to the best focus will be 
-$z_f = -n_f d_\text{cs} /n_i$. A similar result will hold even if we consider 
-the spherical aberration induced by the interface, the only thing that changes 
-is the factor in front of $d_\text{cs} $. Therefore, it is best to 
+$z_f = -n_f |z_0| /n_i$. A similar result will hold even if we consider 
+nonparaxial rays, the only thing that changes 
+is the factor in front of $|z_0|$. Therefore, it is best to 
 consider instead
 \begin{align}
-\bt G_0  (\bt u)  = D_{\delta, \alpha} (\bt u) \bt g_0 (\bt u),
+\bt G (\bt u)  = D_{\delta, \alpha} (\bt u) \bt g(\bt u),
 \end{align}
 where
 \begin{multline}
@@ -384,14 +390,14 @@ D_{\delta, \alpha} (\bt u)= \exp \Bigg\{
   \sqrt{1 - \left(\frac{n_f u}{n_i} \right)^2 }  \\
 - \alpha \sqrt{1 - u^2} \Bigg] \Bigg\} , 
 \end{multline}
-with $\delta = d_\text{cs} / \lambda$ and $z_f = -\alpha d_\text{cs}$. 
+with $\delta = |z_0| / \lambda$ and $z_f = -\alpha |z_0|$. 
 Note that it has been assumed that the source is placed  
- along the optical axis so that $\bs \rho_0 = (0,0)$. 
+along the optical axis so that $\bs \rho_0 = (0,0)$. 
 Any deviation from this assumption will be corrected be the scalar tilts 
 given by the tilt Zernike polynomials in the phase term $W$ of $\bt J_A$.
 The parameter $\delta$ now predominantly controls the amount of exponential 
 decay for the SAF radiation while $\alpha$ controls the defocus of the system. 
-For fluorescing nanobead samples it is safe to 
+For fluorescent nanobead samples it is safe to 
 assume that they are all fixed to the coverslip so that their distance to the 
 coverslip can be taken as their radius and can be taken off the optimization
 routine.  However, the choice of the best focus is quite subjective and should 
@@ -446,9 +452,9 @@ propagated to the image plane via,
 e^{ - \im k  \frac{n_f \bs \rho}{M}  \cdot \bt u } \ud \bt u .
 \end{align}
 Here, it will be assumed that the source emits fully unpolarized light. This 
-is the case for fluorescing nanobeads which are commonly used to characterize or test 
+is the case for fluorescent nanobeads which are commonly used to characterize or test 
 fluorescence microscopes since they have a stronger signal than that emitted 
-by single fluorescing molecules. In this case the measured intensity is 
+by single fluorescent molecules. In this case the measured intensity is 
 given by the incoherent sum of the PSFs produced by dipoles oriented along 
 each of the three Cartesian axes which is the same as the squared Frobenius 
 norm of the Green tensor at the image plane 
@@ -468,7 +474,7 @@ More details about the blurring models implemented can be found in the
 Supplementary Information.
 
 As a last step for computing the measured intensity, we also consider 
-the effect of photobleaching of the fluorescing nanobeads and the background 
+the effect of photobleaching of the fluorescent nanobeads and the background 
 illumination. The photobleaching causes the number of photons emitted by the 
 nanobead to diminish with time. Its effect can be taken into account by 
 implementing an overall amplitude factor $\mathcal{A}^{(p,\zeta)}$
@@ -521,7 +527,9 @@ before launching the optimization routine.
 \begin{figure}
   \centering
   \includegraphics[width=.9\linewidth]{stack.pdf}
-  \caption{\label{fig:stack} . }
+  \caption{\label{fig:stack} PSF stack with phase and polarization diversities 
+  modelled with \texttt{pyPSFstack} and used for the retrieval of the Jones
+  matrix of an SEO element. }
 \end{figure}
 
 \section{Numerical experiments}
@@ -533,7 +541,7 @@ Both have been used in practice to measure
 the position and orientation of dipolar emitters \cite{}. All the modelled
 data stacks are computed using \texttt{pyPSFstack} which allows
 computing the PSF stack with phase and polarization diversities, and can 
-compute the three-dimensional blurring due to the size of the fluorescing
+compute the three-dimensional blurring due to the size of the fluorescent
 nano-bead. Figure \ref{fig:stack} shows as an example the stack used for 
 retrieving the SEO birefringent mask with both phase and polarization diversity. 
 It can also simulate the effect of the background illumination
@@ -559,7 +567,7 @@ prism separates the two linearly-polarized components.
 
 As a first example, we consider the retrieval of a birefringent mask with and without
 the use of polarization diversity. For this, the data is modelled assuming 
-the source is a 20nm fluorescing nanobead,
+the source is a 20nm fluorescent nanobead,
 with an average of 20000 photons hitting our detectors 
 per PSF to which we add 100 photons per pixel 
 as the background illumination. Noise following a Poisson distribution
