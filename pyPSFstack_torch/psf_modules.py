@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.fft as fft
 import numpy as np
-
+from .blurring.blurring import torchNoBlurring
 from .functions import crop_center
 
 class torchPSFStack(nn.Module):
@@ -11,7 +11,8 @@ class torchPSFStack(nn.Module):
                  N_data,
                  pupils,                
                  zdiversity=None,
-                 pdiversity=None
+                 pdiversity=None,
+                 blurring=torchNoBlurring()
                  ):
         super(torchPSFStack, self).__init__()
         
@@ -19,6 +20,7 @@ class torchPSFStack(nn.Module):
         self.pupils = nn.ModuleList(pupils)
         self.zdiversity = zdiversity
         self.pdiversity = pdiversity
+        self.blurring = blurring
         
         self.N_pupils = len(self.pupils)
         self.N_pts = self.pupils[0].N_pts
@@ -46,6 +48,8 @@ class torchPSFStack(nn.Module):
         for ind in range(self.N_pupils-1):
             output = self.pupils[ind+1](output)
 
+        output = self.blurring.diversity(output)
+
         if self.zdiversity is not None:
             output = self.zdiversity(output)
 
@@ -54,13 +58,15 @@ class torchPSFStack(nn.Module):
                      dim=(0,1),
                      s=(self.N_pts,self.N_pts)),
             dim=(0,1))/self.N_pts
-
+    
         output = crop_center(output, self.N_data)
-
+        
         if self.pdiversity is not None:
             output = self.pdiversity.forward(output)
-        output = torch.sum(torch.abs(output)**2,dim=(-2,-1))
-        
+
+        # output = torch.sum(torch.abs(output)**2,dim=(-2,-1))
+        output = self.blurring(output)
+
         if self.pb_bck is not None:
             output = self.pb_bck(output)
 
