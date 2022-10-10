@@ -98,23 +98,26 @@ class SABlurring(Blurring):
         
 
     def compute_blurred_psfs(self, input, orientation):
-        output = self._compute_intensity_der(input, orientation)
+        output = self._compute_even_intensity_der(input, orientation)
         output = self.bk.forward(output)
         return np.abs(output)
+        # return output
 
-    def _compute_intensity_der(self, input, orientation):
+    def _compute_even_intensity_der(self, input, orientation):
         
         if orientation == [0,0,0]:
             field_m = input
         else:
             field_m = input @ (np.array(orientation))
         
-        int_m = np.zeros_like(field_m)
+        in_sh = list(input.shape)
+        l_max = self.m_max//2 +1
+        int_m = np.zeros(in_sh[:2]+[l_max]+in_sh[3:], dtype=np.cfloat)
 
-        for m in range(self.m_max+1):
-            for l in range(m):
-                int_m[:,:,m,...] += (factorial(m)/(factorial(l)*factorial(m-l))) * \
-                    np.conj(field_m[:,:,l,...]) * np.conj(field_m[:,:,m-l,...])
+        for l in range(l_max):
+            for k in range(2*l+1):
+                int_m[:,:,l,...] += (factorial(2*l)/(factorial(k)*factorial(2*l-k))) * \
+                    np.conj(field_m[:,:,k,...]) * field_m[:,:,2*l-k,...]
         
         if orientation == [0,0,0]:
             return np.sum(int_m, axis=(-2,-1))
