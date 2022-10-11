@@ -66,7 +66,7 @@ class torchPSFStack(nn.Module):
 
         # output = torch.sum(torch.abs(output)**2,dim=(-2,-1))
         output = self.blurring(output)
-
+        
         if self.pb_bck is not None:
             output = self.pb_bck(output)
 
