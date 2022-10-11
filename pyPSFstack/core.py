@@ -20,7 +20,7 @@ class PSFStack():
         self.pdiversity = pdiversity
         self.blurring = blurring
 
-    def compute_psf_stack(self, orientation=[0,0,0]):
+    def compute_psf_stack(self, orientation=[0,0,0], N_trim=None):
         output = self._compute_compound_pupils()
         # diversities can be added to pupil sequence
         
@@ -34,8 +34,12 @@ class PSFStack():
         if self.pdiversity is not None:
             output = self.pdiversity.forward(output)
 
-        self.psf_stack = self.blurring.compute_blurred_psfs(output, orientation)
-
+        output = self.blurring.compute_blurred_psfs(output, orientation)
+        
+        if N_trim is not None:
+            self.psf_stack = trim_stack(output, N_trim)
+        else:
+            self.psf_stack = output
 
     def _compute_compound_pupils(self):
         output = self.pupils[0].get_pupil_array()
