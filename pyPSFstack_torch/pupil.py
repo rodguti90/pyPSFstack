@@ -93,13 +93,14 @@ class torchBlurringKernel(torchPupil):
         bk = self.get_pupil_array()
         dim_bk = len(bk.shape)
         dim_in = len(input.shape)
-        assert input.shape[:dim_bk] == bk.shape
+        # assert input.shape[:dim_bk] == bk.shape
+        N_data = input.shape[0]
 
-        bk = torch.reshape(bk, list(len(bk.shape))+[1]*(dim_in-dim_bk))
-        otf = torch.fft.fftshift(torch.fft.ifft2(input, axes=(0,1)), axes=(0,1))
-        output = torch.fft.fft2(torch.fft.ifftshift(otf * bk, axes=(0,1)), 
-                axes=(0,1))
-        
+        bk = torch.reshape(bk, list(bk.shape)+[1]*(dim_in-dim_bk))
+        otf = torch.fft.fftshift(torch.fft.ifft2(input, dim=(0,1), s=(self.N_pts,self.N_pts)), dim=(0,1))
+        output = torch.fft.fft2(torch.fft.ifftshift(otf * bk, dim=(0,1)), 
+                dim=(0,1))
+        output = output[:N_data,:N_data,...]
         if dim_bk==3:
             output = torch.sum(output, axis=2)
 
