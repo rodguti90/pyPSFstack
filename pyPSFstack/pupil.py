@@ -88,7 +88,7 @@ class BlurringKernel(Pupil):
         bk = self.get_pupil_array()
         dim_bk = len(bk.shape)
         dim_in = len(input.shape)
-        assert input.shape[:dim_bk] == bk.shape
+        # assert input.shape[:dim_bk] == bk.shape
 
         bk = np.expand_dims(bk, list(np.arange(dim_bk,dim_in)))
         otf = np.fft.fftshift(np.fft.ifft2(input, axes=(0,1)), axes=(0,1))
