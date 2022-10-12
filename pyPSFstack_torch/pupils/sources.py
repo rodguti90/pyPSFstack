@@ -10,19 +10,15 @@ class torchDipoleInterfaceSource(torchSource):
 
     def __init__(self, aperture_size=1, computation_size=4., 
                  N_pts=128, ni=1.33, nf=1.518, delta=0.1, 
-                 alpha=None, opt_delta=False, opt_alpha=False
+                 alpha=None, opt_delta=False
                  ):
         super(torchDipoleInterfaceSource, self).__init__(aperture_size, computation_size, N_pts)
 
-        # self.alpha = nn.Parameter(torch.tensor((nf/ni)**3, requires_grad=True, dtype=torch.float))
         if alpha is None:
             nr = nf/ni
             alpha = (140*nr + 42*nr**3 + 42*nr**5 + 15*nr**7)/(140 + 84*nr**2 + 15*nr**4)
-        
-        if opt_alpha:
-            self.alpha = nn.Parameter(torch.tensor(alpha, requires_grad=True, dtype=torch.float))
-        else:
-            self.alpha = alpha
+
+        self.alpha = alpha
         
         if opt_delta:
             self.delta = nn.Parameter(torch.tensor(delta, requires_grad=True, dtype=torch.float))
