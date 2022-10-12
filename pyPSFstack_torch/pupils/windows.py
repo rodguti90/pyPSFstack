@@ -7,15 +7,16 @@ import numpy as np
 
 class torchDefocus(torchScalarWindow):
     def __init__(self, aperture_size=1., computation_size=4., 
-                 N_pts=128, nf=1.518
+                 N_pts=128, nf=1.518, delta_z=0.
                  ):
         super(torchDefocus, self).__init__(aperture_size, computation_size, N_pts)
         
         self.nf = nf
-        self.delta_z = nn.Parameter(torch.tensor(0, requires_grad=True, dtype=torch.float))
+        self.delta_z = nn.Parameter(torch.tensor(delta_z, requires_grad=True, dtype=torch.float))
         
     def get_pupil_array(self):
         ur, _ = self.polar_mesh()
+        ur = ur.type(torch.cfloat)
         aperture = self.get_aperture(dummy_ind=0)
         defocus = torch.exp(-1j*2*np.pi*self.nf*self.delta_z*(1-ur**2)**(1/2))
         return aperture * defocus
@@ -33,7 +34,7 @@ class torchSAF(torchScalarWindow):
     def get_pupil_array(self):
         ur, _ = self.polar_mesh()
         ur = ur.type(torch.cfloat)
-        aperture = self.get_aperture()
+        aperture = self.get_aperture(dummy_ind=0)
         saf = torch.exp(1j*2*np.pi*self.delta_d*self.ni
                         *(1-(ur*self.nf/self.ni)**2)**(1/2))
         return aperture * saf
