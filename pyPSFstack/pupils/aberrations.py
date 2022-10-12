@@ -6,7 +6,7 @@ Created on Sun Dec 19 18:35:07 2021
 @author: rodrigo
 """
 import numpy as np
-from ..pupil import BirefringentWindow
+from ..pupil import BirefringentWindow, ScalarWindow
 from .aberration_functions import zernike_sequence, defocus_j
 
 class UnitaryAberrations(BirefringentWindow):
@@ -69,4 +69,42 @@ class UnitaryAberrations(BirefringentWindow):
         return Gamma * Q        
 
 
-         
+class ScalarAberrations(ScalarWindow):
+    '''
+    UnitaryAberrations defines a pupil composed of a general Jones matrix where its elements
+    are expanded in terms of Zernike polynomials. 
+    Note: The piston term controlling the overall amplutde of the mask is fixed to one 
+    (if we want to optimize it we'll need to change it but it is redundant with photobleaching 
+    amplitudes) and the piston and defocus terms of the scalar phase are ommitted.
+    '''
+    def __init__(self, c_A, c_W, aperture_size=1., computation_size=4., 
+                 N_pts=128, index_convention='fringe'):
+        
+        BirefringentWindow.__init__(self, aperture_size, computation_size, N_pts)
+        
+        # assert len(jmax_list) == 5
+        # self.jmax_list = jmax_list
+        self.jmax_list = [len(c_A), len(c_W)+1]
+        
+        self.c_A = c_A
+        self.c_W = c_W
+        self.index_convention = index_convention
+        
+        # self.defocus_j = defocus_j(index_convention)
+
+    def get_pupil_array(self): 
+
+        x, y = self.xy_mesh()
+        N_pts = x.shape[0]
+        zernike_seq = zernike_sequence(np.max(self.jmax_list), 
+                                        self.index_convention, 
+                                        x/self.aperture_size, 
+                                        y/self.aperture_size)
+        
+        Amp = np.sum(zernike_seq[...,:self.jmax_list[0]] 
+                * self.c_A, axis=2)        
+        #Compute the wavefront          
+        W = np.sum(zernike_seq[...,1:self.jmax_list[1]] * self.c_W, axis = 2)
+       
+        
+        return Amp *  np.exp(1j * 2 * np.pi * W)       
