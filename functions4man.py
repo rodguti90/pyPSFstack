@@ -125,10 +125,10 @@ def get_xyzstack(pupil_sequence, pdiv, N_stack=20):
     return stack
 
 def find_pupil(data_stack, params, lr=3e-2, n_epochs = 200, loss_fn=loss_loglikelihood, pdiv=True, blurring=torchNoBlurring(),
-opt_def=False,opt_delta=False):
+opt_def=True,opt_delta=False):
 
     tsrc = torchDipoleInterfaceSource(**params['pupil'],**params['source'],opt_delta=opt_delta)
-    tdef = torchDefocus(**params['pupil'])
+    tdef = torchDefocus(**params['pupil'],**params['defocus'])
     twdw = torchUnitaryAberrations(**params['pupil'], **params['aberrations'])
     if opt_def:
         tpupil_sequence = [tsrc, tdef, twdw]
