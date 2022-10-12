@@ -9,7 +9,7 @@ from pyPSFstack.functions import trim_stack
 
 from pyPSFstack_torch.psf_modules import torchPSFStack
 from pyPSFstack_torch.pupils.sources import torchDipoleInterfaceSource
-from pyPSFstack_torch.pupils.windows import torchSEO
+from pyPSFstack_torch.pupils.windows import torchDefocus, torchSEO
 from pyPSFstack_torch.pupils.aberrations import torchUnitaryAberrations
 from pyPSFstack_torch.diversities.pupil_diversities import torchZDiversity
 from pyPSFstack_torch.diversities.pola_diversities import torchPDiversity_QWP, \
@@ -79,6 +79,27 @@ def plot_xyz(stack):
     cb_ax = fig.add_axes([0.91,0.14,0.017,0.73])
     fig.colorbar(im, cax=cb_ax)
 
+def plot_xyz_vert(stack):
+    v_max = np.max(np.reshape(stack,(4,-1)),axis=1).reshape(4,1,1,1)
+    stack /= v_max
+    n_s = stack.shape[1]
+    sc=30
+    fig, axs = plt.subplots(2,4, figsize=(2*fig_w/4,fig_w/4), gridspec_kw={'wspace':0.1, 'hspace':0}) 
+    arrowprops=dict(arrowstyle="<|-|>", color='white',linewidth=0.1*n_s)
+    
+    for ind in range(4):
+        im = axs[0,ind].imshow(stack[ind][...,0],vmin=0,vmax=1,cmap=psf_cmap)
+        axs[0,ind].set_axis_off()
+        axs[0,ind].annotate("", xy=(n_s/sc, 3*n_s/sc), xytext=(10*n_s/sc, 3*n_s/sc),
+            arrowprops=arrowprops)
+        axs[1,ind].imshow(stack[ind][...,1],vmin=0,vmax=1,cmap=psf_cmap)
+        axs[1,ind].set_axis_off()
+        axs[1,ind].annotate("", xy=(3*n_s/sc,n_s/sc), xytext=(3*n_s/sc, 10*n_s/sc),
+            arrowprops=arrowprops)
+    
+    cb_ax = fig.add_axes([0.91,0.14,0.017,0.73])
+    fig.colorbar(im, cax=cb_ax)
+
 def cat_mat(mat):
     assert len(mat.shape)>=4
     output = np.concatenate((mat[...,0],mat[...,1]), axis=0)
@@ -86,7 +107,7 @@ def cat_mat(mat):
     return output
 
 def plot_jones(jones):
-    fig, ax = plt.subplots(1,1, figsize=(16/4,16/4), gridspec_kw={'wspace':-.05, 'hspace':0})
+    fig, ax = plt.subplots(1,1, figsize=(fig_w/4,fig_w/4), gridspec_kw={'wspace':-.05, 'hspace':0})
     n_p = jones.shape[0]
     ax.imshow(colorize(cat_mat(jones)))
     ax.set_axis_off()
@@ -104,11 +125,15 @@ def get_xyzstack(pupil_sequence, pdiv, N_stack=20):
     return stack
 
 def find_pupil(data_stack, params, lr=3e-2, n_epochs = 200, loss_fn=loss_loglikelihood, pdiv=True, blurring=torchNoBlurring(),
-opt_alpha=False,opt_delta=False):
+opt_def=False,opt_delta=False):
 
-    tsrc = torchDipoleInterfaceSource(**params['pupil'],**params['source'],opt_alpha=opt_alpha,opt_delta=opt_delta)
+    tsrc = torchDipoleInterfaceSource(**params['pupil'],**params['source'],opt_delta=opt_delta)
+    tdef = torchDefocus(**params['pupil'])
     twdw = torchUnitaryAberrations(**params['pupil'], **params['aberrations'])
-    tpupil_sequence = [tsrc, twdw]
+    if opt_def:
+        tpupil_sequence = [tsrc, tdef, twdw]
+    else:
+        tpupil_sequence = [tsrc, twdw]
     tzdiv = torchZDiversity(**params['zdiversity'], **params['pupil'])
     if pdiv:
         tpdiv = torchPDiversity_Compound([torchPDiversity_QWP(params['pdiversity']['qwp_angles']), 
