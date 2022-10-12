@@ -7,7 +7,7 @@ Created on Sun Dec 19 18:34:02 2021
 """
 import numpy as np
 
-from ..pupil import BirefringentWindow
+from ..pupil import BirefringentWindow, ScalarWindow
 from ..diversities.pola_diversities import jones_qwp
 
 # class NoPupil(Pupil):
@@ -16,6 +16,23 @@ from ..diversities.pola_diversities import jones_qwp
     
 #     def get_pupil_array(self):
 #         return np.array([[1,0],[0,1]])
+
+class Defocus(ScalarWindow):
+    def __init__(self, aperture_size=1., computation_size=4., 
+                 N_pts=128, nf=1.518, delta_z=0
+                 ):
+        super(Defocus, self).__init__(aperture_size, computation_size, N_pts)
+        
+        self.nf = nf
+        self.delta_z = delta_z
+        
+    def get_pupil_array(self):
+        ur, _ = self.polar_mesh()
+        ur = ur.astype(np.cfloat)
+        aperture = self.get_aperture(dummy_ind=0)
+        defocus = np.exp(-1j*2*np.pi*self.nf*self.delta_z*(1-ur**2)**(1/2))
+        return aperture * defocus
+
 
 class SEO(BirefringentWindow):
     def __init__(self, aperture_size = 1., computation_size=4., 
