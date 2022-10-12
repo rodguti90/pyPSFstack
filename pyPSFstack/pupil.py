@@ -75,6 +75,18 @@ class BirefringentWindow(Pupil):
     
     def forward(self, input):
         return self.get_pupil_array() @ input
+
+class ScalarWindow(Pupil):
+    def __init__(self, 
+                 aperture_size=1., 
+                 computation_size=4., 
+                 N_pts=128):
+                 
+        Pupil.__init__(self, aperture_size, computation_size, N_pts)
+    
+    def forward(self, input):
+        pupil_array = self.get_pupil_array()
+        return pupil_array[...,None,None] * input
               
 class BlurringKernel(Pupil):
     def __init__(self,
