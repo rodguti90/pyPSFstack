@@ -16,7 +16,7 @@ class torchDefocus(torchScalarWindow):
         
     def get_pupil_array(self):
         ur, _ = self.polar_mesh()
-        aperture = self.get_aperture()
+        aperture = self.get_aperture(dummy_ind=0)
         defocus = torch.exp(-1j*2*np.pi*self.nf*self.delta_z*(1-ur**2)**(1/2))
         return aperture * defocus
 
