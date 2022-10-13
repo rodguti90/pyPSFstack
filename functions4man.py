@@ -10,7 +10,7 @@ from pyPSFstack.functions import trim_stack
 from pyPSFstack_torch.psf_modules import torchPSFStack
 from pyPSFstack_torch.pupils.sources import torchDipoleInterfaceSource
 from pyPSFstack_torch.pupils.windows import torchDefocus, torchSEO
-from pyPSFstack_torch.pupils.aberrations import torchUnitaryAberrations
+from pyPSFstack_torch.pupils.aberrations import torchScalarAberrations, torchUnitaryAberrations
 from pyPSFstack_torch.diversities.pupil_diversities import torchZDiversity
 from pyPSFstack_torch.diversities.pola_diversities import torchPDiversity_QWP, \
     torchPDiversity_LP, torchPDiversity_Compound
@@ -114,7 +114,7 @@ def plot_jones(jones):
     labels = [r'$\textbf{J}_\textbf{{xx}}$',r'$\textbf{J}_\textbf{{xy}}$',
         r'$\textbf{J}_\textbf{{yx}}$',r'$\textbf{J}_\textbf{{yy}}$']
     for i in range(4):
-        ax.text(((i//2)%2)*n_p,(i%2)*n_p +n_p/12, labels[i], color='white', fontsize=12)
+        ax.text(((i//2)%2)*n_p,(i%2)*n_p +n_p/8, labels[i], color='white', fontsize=18)
 
 def get_xyzstack(pupil_sequence, pdiv, N_stack=20):
     psf = PSFStack(pupil_sequence, pdiversity=pdiv)
@@ -125,16 +125,26 @@ def get_xyzstack(pupil_sequence, pdiv, N_stack=20):
     return stack
 
 def find_pupil(data_stack, params, lr=3e-2, n_epochs = 200, loss_fn=loss_loglikelihood, pdiv=True, blurring=torchNoBlurring(),
-opt_def=True,opt_delta=False):
+opt_def=True,opt_delta=False,abe='unitary'):
 
     tsrc = torchDipoleInterfaceSource(**params['pupil'],**params['source'],opt_delta=opt_delta)
-    tdef = torchDefocus(**params['pupil'],**params['defocus'])
-    twdw = torchUnitaryAberrations(**params['pupil'], **params['aberrations'])
+    tpupil_sequence = [tsrc]
+
     if opt_def:
-        tpupil_sequence = [tsrc, tdef, twdw]
-    else:
-        tpupil_sequence = [tsrc, twdw]
+        tdef = torchDefocus(**params['pupil'],**params['defocus'])
+        tpupil_sequence += [tdef]
+
+    if abe is not None:
+        if abe=='unitary':
+            twdw = torchUnitaryAberrations(**params['pupil'], **params['aberrations'])
+        elif abe=='scalar':
+            twdw = torchScalarAberrations(**params['pupil'], **params['aberrations'])
+        else:
+            raise ValueError('Option not implmented')
+        tpupil_sequence += [twdw]
+
     tzdiv = torchZDiversity(**params['zdiversity'], **params['pupil'])
+    
     if pdiv:
         tpdiv = torchPDiversity_Compound([torchPDiversity_QWP(params['pdiversity']['qwp_angles']), 
             torchPDiversity_LP(params['pdiversity']['lp_angles'])])
@@ -195,3 +205,64 @@ def seq_cpx_corr(Yseq,Yref=None,mask=None):
     norm_ref = np.sum(np.abs(Yref)**2)
     norm_seq = np.sum(np.abs(Yseq)**2, axis=-1)
     return corr/np.sqrt(norm_ref*norm_seq)
+
+
+def find_exp_pupil(data_stack, params, lr=3e-2, n_epochs = 200, loss_fn=loss_loglikelihood, 
+        blurring=torchNoBlurring(), opt_def=True,opt_delta=False, seo=False, abe=False, opt_a=False):
+
+    tsrc = torchDipoleInterfaceSource(**params['pupil'],**params['source'],opt_delta=opt_delta)
+    tpupil_sequence = [tsrc]
+
+    if opt_def:
+        tdef = torchDefocus(**params['pupil'],**params['defocus'])
+        tpupil_sequence += [tdef]
+    if seo:
+        tseo = torchSEO(**params['pupil'],**params['seo'])
+        tpupil_sequence += [tseo]
+    if abe:
+        twdw = torchUnitaryAberrations(**params['pupil'], **params['aberrations'])
+        tpupil_sequence += [twdw]
+
+    tzdiv = torchZDiversity(**params['zdiversity'], **params['pupil'])
+    
+    tpdiv = torchPDiversity_Compound([torchPDiversity_QWP(params['pdiversity']['qwp_angles']), 
+            torchPDiversity_LP(params['pdiversity']['lp_angles'])])
+    
+
+    model_retrieved = torchPSFStack(
+                    data_stack.shape[0],
+                    tpupil_sequence,
+                    zdiversity=tzdiv,
+                    pdiversity=tpdiv,
+                    blurring=blurring
+                    )
+
+    data_norm, data_bck = get_normNbck(data_stack)
+    with torch.no_grad():
+        model_retrieved.eval()
+        first_est = model_retrieved()
+    model_retrieved.set_scale_factor(data_norm/torch.sum(first_est))
+    model_retrieved.set_pb_bck(data_bck, opt_b=True, opt_a=opt_a)
+    with torch.no_grad():
+        model_retrieved.eval()
+        first_est = model_retrieved()
+
+
+    optimizer = torch.optim.Adam(
+        model_retrieved.parameters(), 
+        lr=lr
+    )
+    data = torch.from_numpy(data_stack).type(torch.float)
+    loss_evol =[]
+    for epoch in tqdm(range(n_epochs)):
+        
+        model_retrieved.train()
+        yhat = model_retrieved()
+        
+        loss = loss_fn(yhat, data)
+        loss_evol += [loss.item()]
+        loss.backward()    
+        optimizer.step()
+        optimizer.zero_grad()
+
+    return model_retrieved, loss_evol
