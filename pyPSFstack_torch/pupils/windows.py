@@ -43,15 +43,16 @@ class torchSAF(torchScalarWindow):
 class torchSEO(torchBirefringentWindow):
 
     def __init__(self, aperture_size=1., computation_size=4., 
-                 N_pts=128, c=1.24*np.pi
+                 N_pts=128, c=1.24*np.pi, phi=0
                  ):
         super(torchSEO, self).__init__(aperture_size, computation_size, N_pts)
 
         self.c = nn.Parameter(torch.tensor(c, requires_grad=True, dtype=torch.float))
-        
+        self.phi = nn.Parameter(torch.tensor(phi, requires_grad=True, dtype=torch.float))
+
     def get_pupil_array(self):
         ur, uphi = self.polar_mesh()
-        return self.get_aperture() * jones_seo(ur, uphi, c=self.c)
+        return self.get_aperture() * jones_seo(ur, uphi, c=self.c, phi=self.phi)
 
 class torchQplate(torchBirefringentWindow):
 
@@ -77,11 +78,11 @@ def jones_qplate(uphi, q, alpha):
     pupil_array[...,1,0] = -torch.conj(pupil_array[...,0,1])
     pupil_array[...,1,1] = torch.conj(pupil_array[...,0,1])
 
-def jones_seo(ur, uphi, c=1.24*np.pi):
+def jones_seo(ur, uphi, c=1.24*np.pi, phi=0):
     ny, nx = ur.shape
     pupil_array = torch.empty((ny,nx,2,2), dtype=torch.cfloat)
-    pupil_array[...,0,0] = torch.cos(c*ur/2) -1j*torch.sin(c*ur/2)*torch.cos(uphi)
-    pupil_array[...,0,1] = -1j*torch.sin(c*ur/2)*torch.sin(uphi)
+    pupil_array[...,0,0] = torch.cos(c*ur/2) -1j*torch.sin(c*ur/2)*torch.cos(uphi-2*phi)
+    pupil_array[...,0,1] = -1j*torch.sin(c*ur/2)*torch.sin(uphi-2*phi)
     pupil_array[...,1,0] = pupil_array[...,0,1]
     pupil_array[...,1,1] = torch.conj(pupil_array[...,0,0])
     

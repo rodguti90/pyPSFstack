@@ -36,13 +36,14 @@ class Defocus(ScalarWindow):
 
 class SEO(BirefringentWindow):
     def __init__(self, aperture_size = 1., computation_size=4., 
-                 N_pts=128, c=1.24*np.pi):
+                 N_pts=128, c=1.24*np.pi, phi=0):
         BirefringentWindow.__init__(self, aperture_size, computation_size, N_pts)
         self.c = c
+        self.phi = phi
 
     def get_pupil_array(self):
         ur, uphi = self.polar_mesh()
-        return self.get_aperture() * jones_seo(ur, uphi, c=self.c)
+        return self.get_aperture() * jones_seo(ur, uphi, c=self.c, phi=self.phi)
 
     # def forward(self, input):
     #     return self.get_pupil_array() @ input
@@ -81,11 +82,11 @@ def jones_qplate(uphi, q, alpha):
     jones_mat[...,1,1] = np.conj(jones_mat[...,0,0])
     return jones_mat
 
-def jones_seo(ur, uphi, c=1.24*np.pi):
+def jones_seo(ur, uphi, c=1.24*np.pi, phi=0):
     ny, nx = ur.shape
     jones_mat = np.empty((ny,nx,2,2), dtype=np.cfloat)
-    jones_mat[...,0,0] = np.cos(c*ur/2) +1j*np.sin(c*ur/2)*np.cos(uphi)
-    jones_mat[...,0,1] = -1j*np.sin(c*ur/2)*np.sin(uphi)
+    jones_mat[...,0,0] = np.cos(c*ur/2) +1j*np.sin(c*ur/2)*np.cos(uphi-2*phi)
+    jones_mat[...,0,1] = -1j*np.sin(c*ur/2)*np.sin(uphi-2*phi)
     jones_mat[...,1,0] = jones_mat[...,0,1]
     jones_mat[...,1,1] = np.conj(jones_mat[...,0,0])
     return jones_mat
