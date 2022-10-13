@@ -81,9 +81,7 @@ class ScalarAberrations(ScalarWindow):
                  N_pts=128, index_convention='fringe'):
         
         BirefringentWindow.__init__(self, aperture_size, computation_size, N_pts)
-        
-        # assert len(jmax_list) == 5
-        # self.jmax_list = jmax_list
+
         self.jmax_list = [len(c_A), len(c_W)+1]
         
         self.c_A = c_A
@@ -95,7 +93,6 @@ class ScalarAberrations(ScalarWindow):
     def get_pupil_array(self): 
 
         x, y = self.xy_mesh()
-        N_pts = x.shape[0]
         zernike_seq = zernike_sequence(np.max(self.jmax_list), 
                                         self.index_convention, 
                                         x/self.aperture_size, 
