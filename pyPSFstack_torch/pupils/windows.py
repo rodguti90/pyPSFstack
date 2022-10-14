@@ -18,7 +18,7 @@ class torchDefocus(torchScalarWindow):
         ur, _ = self.polar_mesh()
         ur = ur.type(torch.cfloat)
         aperture = self.get_aperture(dummy_ind=0)
-        defocus = torch.exp(-1j*2*np.pi*self.nf*self.delta_z*(1-ur**2)**(1/2))
+        defocus = torch.exp(1j*2*np.pi*self.nf*self.delta_z*(1-ur**2)**(1/2))
         return aperture * defocus
 
 class torchSAF(torchScalarWindow):

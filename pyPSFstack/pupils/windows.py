@@ -30,7 +30,7 @@ class Defocus(ScalarWindow):
         ur, _ = self.polar_mesh()
         ur = ur.astype(np.cfloat)
         aperture = self.get_aperture(dummy_ind=0)
-        defocus = np.exp(-1j*2*np.pi*self.nf*self.delta_z*(1-ur**2)**(1/2))
+        defocus = np.exp(1j*2*np.pi*self.nf*self.delta_z*(1-ur**2)**(1/2))
         return aperture * defocus
 
 
