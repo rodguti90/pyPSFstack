@@ -32,7 +32,12 @@ def crop_center(input, size):
 
 def get_pupils_param_dict(model):
     dic = {}
-   
+    md_list = []
+    for name in model.state_dict().keys():
+        pt_ind = name.rfind('.')
+        md_list += [name[:pt_ind]]
+
+
     for pupil_ind in range(len(model.pupils)):
         dic['pupil'+str(pupil_ind)] = {}
         state = model.pupils[pupil_ind].state_dict()
@@ -47,6 +52,19 @@ def get_pupils_param_dict(model):
                     curr_dic[name[:pt_ind]] = [torch.Tensor.cpu(state[name]).numpy()]
             else:
                 curr_dic[name] = torch.Tensor.cpu(state[name]).numpy()
+    
+    
+    if 'pb_bck' in md_list:
+        dic['pb_bck'] = {}
+        for name in model.pb_bck.state_dict().keys():
+            dic['pb_bck'][name] =  (model.state_dict()['pb_bck'+'.'+name]).cpu().numpy()
+            
+    if 'blurring.bk' in md_list:
+        dic['blurring'] = {}
+        for name in model.blurring.bk.state_dict().keys():
+            dic['blurring'][name] =  (model.state_dict()['blurring.bk'+'.'+name]).cpu().numpy()
+            
+
     return dic
 
 
