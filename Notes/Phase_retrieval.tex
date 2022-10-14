@@ -224,7 +224,7 @@ accessible at \cite{}.
 \end{figure*}
 
 The first step is to have the most accurate model for the propagation 
-of light through our microscope. As shown in Fig.~\ref{fig:aplanatic}, 
+of light through our microscope. As shown in Fig.~\ref{fig:setup}, 
 the source is embedded in a medium of index of refraction $n_i$ at a 
 distance $z_0$ from the interface with immersion oil of index of 
 refraction $n_f$, the interface is given by the coverslip which is assumed
@@ -346,7 +346,12 @@ corresponding to piston and defocus should be excluded, this is
 automatically handled by the software \cite{}. The piston term only 
 fixes a global phase which cannot be determined from intensity measurements
 while the defocus term is redundant with the more accurate defocus parameter
-$z_f$ in Eq.~\ref{eq:G0}.
+$z_f$ in Eq.~\ref{eq:G0}. 
+From now on, it will be assumed that the source is placed  
+along the optical axis so that $\bs \rho_0 = (0,0)$, with
+any deviation from this being corrected be the scalar tilts 
+present in $W$.
+
 This Zernike expansion is inspired by the Nijboer-Zernike theory 
 \cite{janssen2002extended,braat2003extended,braat2005extended} where a 
 scalar mask would be separated into real and imaginary parts before 
@@ -370,43 +375,49 @@ will be estimated along with the coefficients of the Zernike decomposition
 of the birefringent mask. The most obvious solution is to directly 
 use $z_f$ and $z_0$ as parameters, however both phase 
 terms have similar effect when the 
-radial coordinate $u$ is below the SAF radiation and this might cause the 
-nonlinear optimization to fall into a local minimum which does not provide
-the real values.
-Moreover, the estimation 
-of the distance of the best focus $z_f$ will generally depend on the distance 
-of the nanobead from the coverslip due to the spherical aberration
-produced by the planar interface. For example, if the paraxial 
-approximation is used then the distance to the best focus will be 
-$z_f = -n_f |z_0| /n_i$. A similar result will hold even if we consider 
-nonparaxial rays, the only thing that changes 
-is the factor in front of $|z_0|$. Therefore, it is best to 
+radial coordinate $u$ is below the SAF radiation which might cause the 
+nonlinear optimization to fall into a local minimum.
+Therefore, it is best to 
 consider instead
 \begin{align}
-\bt G (\bt u)  = D_{\delta, \alpha} (\bt u) \bt g(\bt u),
+\bt G (\bt u)  = D_{\delta, \Delta z_f} (\bt u) \bt g(\bt u),
 \end{align}
 where
-\begin{multline}
-D_{\delta, \alpha} (\bt u)= \exp \Bigg\{  
+\begin{align}
+D_{\delta, \alpha} (\bt u)= & \exp \Bigg\{ 
   \im 2 \pi n_f  \delta \Bigg[ \frac{n_i}{n_f} 
-  \sqrt{1 - \left(\frac{n_f u}{n_i} \right)^2 }  \\
-- \alpha \sqrt{1 - u^2} \Bigg] \Bigg\} , 
-\end{multline}
-with $\delta = |z_0| / \lambda$ and $z_f = -\alpha |z_0|$. 
-Note that it has been assumed that the source is placed  
-along the optical axis so that $\bs \rho_0 = (0,0)$. 
-Any deviation from this assumption will be corrected be the scalar tilts 
-given by the tilt Zernike polynomials in the phase term $W$ of $\bt J_A$.
+  \sqrt{1 - \left(\frac{n_f u}{n_i} \right)^2 }
+- \alpha \sqrt{1 - u^2} \Bigg]\Bigg\} \\
+& \times \exp \Bigg(
+  \im 2 \pi n_f \Delta z_f \sqrt{1 - u^2} \Bigg) , 
+\end{align}
+with $\delta = |z_0| / \lambda$ and $z_f =\Delta z_f -\alpha |z_0|$. 
+The key difference is that $\alpha$ is a constant that is chosen to minimize 
+root-mean squared wavefront error (or a similar metric)
+over the range $u \in [0, n_i/n_f]$. 
 The parameter $\delta$ now predominantly controls the amount of exponential 
-decay for the SAF radiation while $\alpha$ controls the defocus of the system. 
-For fluorescent nanobead samples it is safe to 
-assume that they are all fixed to the coverslip so that their distance to the 
-coverslip can be taken as their radius and can be taken off the optimization
-routine.  However, the choice of the best focus is quite subjective and should 
-therefore always be included.
+decay for the SAF radiation while $\Delta z_f$ controls the defocus of the system.
+The plane $\Delta z_f =0$ is where the spherical aberration induced by the 
+interface is best compensated with a simple defocus. Nonetheless, this plane 
+might not coincide with the nominal focal plane chosen during the experimental 
+acquisition given that the choice of the best focus from the image on the camera is 
+quite subjective. In the supplemental document, we provide common choices
+for the best focus with the appropriate PSF for various distances to the coverslip.
+These can be used to determine a better initial value for $Delta z_f$ by 
+comparing them to the data acquired experimentally. 
 
-Strategy: fix $\alpha$ so that wavefront is flatest  and then optimize $\delta$ 
-and a separate defocus parameter.
+Even though this new choice of parameters helps the algorithm to differentiate 
+between the two effects, if some apodization is included in the model then this 
+can mimic or compensate for the exponential decay controlled by $\delta$. 
+Therefore, on must be careful when including $\delta$ in the optimization 
+routine. For fluorescent nanobead samples it is safe to 
+assume that they are all fixed to the coverslip so that their distance to the 
+coverslip can be taken as their radius and thus $\delta$ can be taken off 
+the optimization routine. Nonetheless, in all the numerical experiments a 
+slight error (chosen randomly between $0$ and $20$nm) was introduced 
+for the value of $z_0$, this error  did not affect the final estimation
+of the pupil.
+
 
 \subsection{Phase and polarization diversity}
 
