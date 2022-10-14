@@ -1,6 +1,7 @@
 import torch
 
 from ..pupil import torchBlurringKernel
+import torch.nn as nn
 
 
 class torchBK2DSphere(torchBlurringKernel):
@@ -9,12 +10,16 @@ class torchBK2DSphere(torchBlurringKernel):
                  nf,
                  aperture_size=2.,
                  computation_size=4,
-                 N_pts=128):
+                 N_pts=128,
+                 opt_radius=False):
 
         super(torchBK2DSphere, self).__init__(aperture_size, computation_size, N_pts)
         
         self.nf = nf
-        self.radius = radius
+        if opt_radius:
+            self.radius = nn.Parameter(torch.tensor(radius, requires_grad=True, dtype=torch.float))
+        else:
+            self.radius = radius
 
     def get_pupil_array(self):
         ur, _ = self.polar_mesh(umax=self.computation_size/2)
@@ -31,12 +36,17 @@ class torchBKSASphere(torchBlurringKernel):
                  nf,
                  aperture_size=2.,
                  computation_size=4,
-                 N_pts=128):
+                 N_pts=128,
+                 opt_radius=False
+                 ):
 
         super(torchBKSASphere, self).__init__(aperture_size, computation_size, N_pts)
         
         self.nf = nf
-        self.radius = radius
+        if opt_radius:
+            self.radius = nn.Parameter(torch.tensor(radius, requires_grad=True, dtype=torch.float))
+        else:
+            self.radius = radius
 
     def get_pupil_array(self):
         ur, _ = self.polar_mesh(umax=self.computation_size/2)

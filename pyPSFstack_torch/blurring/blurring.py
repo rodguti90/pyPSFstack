@@ -31,6 +31,7 @@ class torch2DBlurring(torchBlurring):
                  aperture_size=1., 
                  computation_size=4., 
                  N_pts=128,
+                 opt_radius=False
                  ):
 
         super(torch2DBlurring, self).__init__()
@@ -42,7 +43,8 @@ class torch2DBlurring(torchBlurring):
                                nf,
                                aperture_size=2*aperture_size,
                                computation_size=computation_size,
-                               N_pts=N_pts)
+                               N_pts=N_pts,
+                               opt_radius=opt_radius)
 
     def forward(self, input):
         output = self._compute_intensity(input)
@@ -60,6 +62,7 @@ class torchSABlurring(torchBlurring):
                  aperture_size=1., 
                  computation_size=4., 
                  N_pts=128,
+                 opt_radius=False
                  ):
 
         super(torchSABlurring, self).__init__()
@@ -77,7 +80,8 @@ class torchSABlurring(torchBlurring):
                                nf,
                                aperture_size=2*aperture_size,
                                computation_size=computation_size,
-                               N_pts=N_pts)
+                               N_pts=N_pts,
+                               opt_radius=opt_radius)
 
     def forward(self, input):
         output = self._compute_0N2_intensity_der(input)
