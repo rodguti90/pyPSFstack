@@ -1,3 +1,4 @@
+from os import urandom
 import torch
 import torch.nn as nn
 import torch.fft as fft
@@ -43,16 +44,17 @@ class torchSAF(torchScalarWindow):
 class torchSEO(torchBirefringentWindow):
 
     def __init__(self, aperture_size=1., computation_size=4., 
-                 N_pts=128, c=1.24*np.pi, phi=0
+                 N_pts=128, c=1.24*np.pi, phi=0, center=[0,0]
                  ):
         super(torchSEO, self).__init__(aperture_size, computation_size, N_pts)
 
         self.c = nn.Parameter(torch.tensor(c, requires_grad=True, dtype=torch.float))
         self.phi = nn.Parameter(torch.tensor(phi, requires_grad=True, dtype=torch.float))
+        self.center= nn.Parameter(torch.tensor(center, requires_grad=True, dtype=torch.float))
 
     def get_pupil_array(self):
-        ur, uphi = self.polar_mesh()
-        return self.get_aperture() * jones_seo(ur, uphi, c=self.c, phi=self.phi)
+        ux, uy = self.xy_mesh()
+        return self.get_aperture() * jones_seo(ux, uy, c=self.c, phi=self.phi, center=self.center)
 
 class torchQplate(torchBirefringentWindow):
 
@@ -78,8 +80,12 @@ def jones_qplate(uphi, q, alpha):
     pupil_array[...,1,0] = -torch.conj(pupil_array[...,0,1])
     pupil_array[...,1,1] = torch.conj(pupil_array[...,0,1])
 
-def jones_seo(ur, uphi, c=1.24*np.pi, phi=0):
-    ny, nx = ur.shape
+def jones_seo(ux, uy, c=1.24*np.pi, phi=0, center=torch.tensor([0,0])):
+    ny, nx = ux.shape
+    uxt = ux - center[0]
+    uyt = uy - center[1]
+    ur = torch.sqrt(uxt**2 + uyt**2)
+    uphi = torch.atan2(uyt, uxt)
     pupil_array = torch.empty((ny,nx,2,2), dtype=torch.cfloat)
     pupil_array[...,0,0] = torch.cos(c*ur/2) -1j*torch.sin(c*ur/2)*torch.cos(uphi-2*phi)
     pupil_array[...,0,1] = -1j*torch.sin(c*ur/2)*torch.sin(uphi-2*phi)
