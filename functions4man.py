@@ -7,13 +7,13 @@ from tqdm import tqdm
 from pyPSFstack.core import PSFStack
 from pyPSFstack.functions import trim_stack
 
-from pyPSFstack_torch.psf_modules import torchPSFStack
+from pyPSFstack_torch.psf_modules import torchPSFStack, torchPSFStackTilts, torchTilts,torchDefocuses
 from pyPSFstack_torch.pupils.sources import torchDipoleInterfaceSource
 from pyPSFstack_torch.pupils.windows import torchDefocus, torchSEO
-from pyPSFstack_torch.pupils.aberrations import torchScalarAberrations, torchUnitaryAberrations
+from pyPSFstack_torch.pupils.aberrations import torchScalarAberrations, torchUnitaryAberrations, torchApodizedUnitary
 from pyPSFstack_torch.diversities.pupil_diversities import torchZDiversity
 from pyPSFstack_torch.diversities.pola_diversities import torchPDiversity_QWP, \
-    torchPDiversity_LP, torchPDiversity_Compound
+    torchPDiversity_LP, torchPDiversity_Compound, torchPDiversity_GWP
 from pyPSFstack_torch.blurring.blurring import torchNoBlurring
 from pyPSFstack_torch.cost_functions import loss_loglikelihood, loss_sumsquared
 
@@ -125,7 +125,7 @@ def get_xyzstack(pupil_sequence, pdiv, N_stack=20):
     return stack
 
 def find_pupil(data_stack, params, lr=3e-2, n_epochs = 200, loss_fn=loss_loglikelihood, pdiv=True, blurring=torchNoBlurring(),
-opt_def=True,opt_delta=False,abe='unitary'):
+opt_def=True, opt_delta=False,abe='unitary'):
 
     tsrc = torchDipoleInterfaceSource(**params['pupil'],**params['source'],opt_delta=opt_delta)
     tpupil_sequence = [tsrc]
@@ -208,7 +208,8 @@ def seq_cpx_corr(Yseq,Yref=None,mask=None):
 
 
 def find_exp_pupil(data_stack, params, lr=3e-2, n_epochs = 200, loss_fn=loss_loglikelihood, 
-        blurring=torchNoBlurring(), opt_def=True,opt_delta=False, seo=False, abe=False, opt_a=False):
+        blurring=torchNoBlurring(), opt_def=True,opt_delta=False, seo=False, abe=False, opt_a=False,
+        tilts=True, defocsues=True):
 
     tsrc = torchDipoleInterfaceSource(**params['pupil'],**params['source'],opt_delta=opt_delta)
     tpupil_sequence = [tsrc]
@@ -220,22 +221,34 @@ def find_exp_pupil(data_stack, params, lr=3e-2, n_epochs = 200, loss_fn=loss_log
         tseo = torchSEO(**params['pupil'],**params['seo'])
         tpupil_sequence += [tseo]
     if abe:
-        twdw = torchUnitaryAberrations(**params['pupil'], **params['aberrations'])
+        twdw = torchApodizedUnitary(**params['pupil'], **params['aberrations'])
+        # twdw = torchUnitaryAberrations(**params['pupil'], **params['aberrations'])
         tpupil_sequence += [twdw]
 
     tzdiv = torchZDiversity(**params['zdiversity'], **params['pupil'])
     
-    tpdiv = torchPDiversity_Compound([torchPDiversity_QWP(params['pdiversity']['qwp_angles']), 
+    tpdiv = torchPDiversity_Compound([torchPDiversity_GWP(params['pdiversity']['gwp_angles'],params['pdiversity']['eta']), 
             torchPDiversity_LP(params['pdiversity']['lp_angles'])])
-    
+    sh_divs = [len(params['zdiversity']['z_list']), len(tpdiv.jones_list)]
 
-    model_retrieved = torchPSFStack(
-                    data_stack.shape[0],
-                    tpupil_sequence,
-                    zdiversity=tzdiv,
-                    pdiversity=tpdiv,
-                    blurring=blurring
-                    )
+    if tilts:
+        model_retrieved = torchPSFStackTilts(
+                        data_stack.shape[0],
+                        tpupil_sequence,
+                        zdiversity=tzdiv,
+                        pdiversity=tpdiv,
+                        tilts=torchTilts(sh_divs, **params['pupil']),
+                        defocuses=torchDefocuses(sh_divs, **params['pupil']),
+                        blurring=blurring
+                        )
+    else:
+        model_retrieved = torchPSFStack(
+                        data_stack.shape[0],
+                        tpupil_sequence,
+                        zdiversity=tzdiv,
+                        pdiversity=tpdiv,
+                        blurring=blurring
+                        )
 
     data_norm, data_bck = get_normNbck(data_stack)
     with torch.no_grad():
