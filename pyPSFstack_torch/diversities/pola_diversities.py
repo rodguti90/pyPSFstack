@@ -28,6 +28,14 @@ class torchPDiversity_HWP(torchPDiversity):
     def get_jones_list(self, angles):
         return jones_hwp(angles)
 
+class torchPDiversity_GWP(torchPDiversity):
+
+    def __init__(self, angles, eta):
+        torchPDiversity.__init__(self, angles, eta)
+
+    def get_jones_list(self, angles, eta):
+        return jones_gwp(angles, eta)
+
 class torchPDiversity_LP(torchPDiversity):
 
     def __init__(self, angles):

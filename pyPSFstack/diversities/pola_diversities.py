@@ -36,6 +36,14 @@ class PDiversity_LP(PDiversity):
     def get_jones_list(self, angles):
         return jones_lp(angles)
 
+class PDiversity_GWP(PDiversity):
+
+    def __init__(self, angles, eta):
+        PDiversity.__init__(self, angles, eta)
+
+    def get_jones_list(self, angles, eta):
+        return jones_gwp(angles, eta)
+
 class PDiversity_Compound(PDiversity):
     def __init__(self, pdivs):
         PDiversity.__init__(self, pdivs)
