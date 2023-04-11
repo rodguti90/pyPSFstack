@@ -44,13 +44,17 @@ class torchSAF(torchScalarWindow):
 class torchSEO(torchBirefringentWindow):
 
     def __init__(self, aperture_size=1., computation_size=4., 
-                 N_pts=128, c=1.24*np.pi, phi=0, center=[0,0]
+                 N_pts=128, c=1.24*np.pi, phi=0, center=[0,0], opt_params=False
                  ):
         super(torchSEO, self).__init__(aperture_size, computation_size, N_pts)
-
-        self.c = nn.Parameter(torch.tensor(c, requires_grad=True, dtype=torch.float))
-        self.phi = nn.Parameter(torch.tensor(phi, requires_grad=True, dtype=torch.float))
-        self.center= nn.Parameter(torch.tensor(center, requires_grad=True, dtype=torch.float))
+        if opt_params:
+            self.c = nn.Parameter(torch.tensor(c, requires_grad=True, dtype=torch.float))
+            self.phi = nn.Parameter(torch.tensor(phi, requires_grad=True, dtype=torch.float))
+            self.center= nn.Parameter(torch.tensor(center, requires_grad=True, dtype=torch.float))
+        else:
+            self.c = c
+            self.phi = phi
+            self.center= center
 
     def get_pupil_array(self):
         ux, uy = self.xy_mesh()
