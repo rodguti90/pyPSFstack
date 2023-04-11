@@ -218,7 +218,7 @@ def find_exp_pupil(data_stack, params, lr=3e-2, n_epochs = 200, loss_fn=loss_log
         tdef = torchDefocus(**params['pupil'],**params['defocus'])
         tpupil_sequence += [tdef]
     if seo:
-        tseo = torchSEO(**params['pupil'],**params['seo'])
+        tseo = torchSEO(**params['pupil'],**params['seo'], opt_params=True)
         tpupil_sequence += [tseo]
     if abe:
         twdw = torchApodizedUnitary(**params['pupil'], **params['aberrations'])
