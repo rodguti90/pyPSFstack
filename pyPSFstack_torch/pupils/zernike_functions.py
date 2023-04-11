@@ -30,7 +30,7 @@ def zernike_Z(n,m,x,y):
         polZ = radial_zernike(n,mm,rho)*torch.sin(mm*phi)
     else:
         polZ = radial_zernike(n,m,rho)
-    polZ[rho>1] = 0
+    # polZ[rho>1] = 0
     return np.sqrt((2*n+2)/np.pi)*polZ
 
 def zernike_sequence(j_max, convention, x, y):
