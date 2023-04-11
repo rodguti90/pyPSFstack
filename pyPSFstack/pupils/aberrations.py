@@ -84,13 +84,14 @@ class ApodizedUnitary(BirefringentWindow):
         # assert len(jmax_list) == 5
         # self.jmax_list = jmax_list
         self.jmax_list = []
-        self.jmax_list += len(c_A)
-        for i in range(1,4):
+        for i in range(4):
             self.jmax_list += [len(c_q[i])]
         self.jmax_list += [len(c_W)+2]
         self.c_q = c_q
         self.c_W = c_W
         self.c_A = c_A
+
+        self.jmax_list += [len(c_A)]
         self.index_convention = index_convention
         
         self.defocus_j = defocus_j(index_convention)
@@ -105,30 +106,30 @@ class ApodizedUnitary(BirefringentWindow):
                                         y/self.aperture_size)
         # Computes the unitary decomposition matrix and scalar terms         
         #initialize the matrix term   
-        Q = np.zeros((N_pts,N_pts,2,2), dtype=np.cfloat)
         qs = np.zeros((N_pts,N_pts,4))   
-        #Compute the qs
-        for k in range(1,4):
+        for k in range(4):
             qs[...,k] = np.sum(zernike_seq[...,:self.jmax_list[k]] 
-                * self.c_q[k-1], axis=2)        
-        qs[0] = (1-qs[1]**2-qs[2]**2-qs[3]**2)**(1/2)
+                * self.c_q[k], axis=2)        
         #Compute the matrix term    
+        Q = np.zeros((N_pts,N_pts,2,2), dtype=np.cfloat)
         Q[...,0,0] = qs[...,0] + 1j * qs[...,3]
         Q[...,0,1] = qs[...,2] + 1j * qs[...,1]
         Q[...,1,0] = -np.conj(Q[...,0,1])
         Q[...,1,1] = np.conj(Q[...,0,0])
-        #Compute the wavefront
-        # the phase term needs to be computed separetly since it
-        # omits specific zernikes (piston 0 and defocus 4)       
+        normQ = np.sum(np.abs(qs)**2, axis=-1)**(1/2)
+        
+        (qs[0]**2+qs[1]**2+qs[2]**2+qs[3]**2)**(1/2)
+        normQ[normQ==0] = 1
+
         temp = np.hstack((self.c_W[:self.defocus_j-1], [0],
              self.c_W[self.defocus_j-1:]))     
-        W = np.sum(zernike_seq[...,1:self.jmax_list[4]] * temp, axis = 2)
-        Amp = np.sum(zernike_seq[...,:self.jmax_list[4]] * self.c_A, axis = 2)
+        W = np.sum(zernike_seq[...,1:self.jmax_list[-2]] * temp, axis = 2)
+        Amp = np.sum(zernike_seq[...,:self.jmax_list[-1]] * self.c_A, axis = 2)
         #Compute the scalar term
         Gamma = np.empty((N_pts,N_pts,1,1), dtype=np.cfloat)
-        Gamma[...,0,0] = Amp * np.exp(1j * 2 * np.pi * W)
+        Gamma[...,0,0] = Amp * np.exp(1j * 2 * np.pi * W)/normQ
         
-        return Gamma * Q        
+        return Gamma * Q 
 
 
 class ScalarAberrations(ScalarWindow):
