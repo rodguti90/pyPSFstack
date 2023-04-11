@@ -209,7 +209,7 @@ def seq_cpx_corr(Yseq,Yref=None,mask=None):
 
 def find_exp_pupil(data_stack, params, lr=3e-2, n_epochs = 200, loss_fn=loss_loglikelihood, 
         blurring=torchNoBlurring(), opt_def=True,opt_delta=False, seo=False, abe=False, opt_a=False,
-        tilts=True, defocsues=True):
+        tilts=True, defocuses=True):
 
     tsrc = torchDipoleInterfaceSource(**params['pupil'],**params['source'],opt_delta=opt_delta)
     tpupil_sequence = [tsrc]
@@ -230,6 +230,10 @@ def find_exp_pupil(data_stack, params, lr=3e-2, n_epochs = 200, loss_fn=loss_log
     tpdiv = torchPDiversity_Compound([torchPDiversity_GWP(params['pdiversity']['gwp_angles'],params['pdiversity']['eta']), 
             torchPDiversity_LP(params['pdiversity']['lp_angles'])])
     sh_divs = [len(params['zdiversity']['z_list']), len(tpdiv.jones_list)]
+    
+    defs=None
+    if defocuses:
+        defs = torchDefocuses(sh_divs, **params['pupil'])
 
     if tilts:
         model_retrieved = torchPSFStackTilts(
@@ -238,7 +242,7 @@ def find_exp_pupil(data_stack, params, lr=3e-2, n_epochs = 200, loss_fn=loss_log
                         zdiversity=tzdiv,
                         pdiversity=tpdiv,
                         tilts=torchTilts(sh_divs, **params['pupil']),
-                        defocuses=torchDefocuses(sh_divs, **params['pupil']),
+                        defocuses=defs,
                         blurring=blurring
                         )
     else:
