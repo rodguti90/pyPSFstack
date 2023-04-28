@@ -7,17 +7,17 @@ from tqdm import tqdm
 from pyPSFstack.core import PSFStack
 from pyPSFstack.functions import trim_stack
 
-from pyPSFstack_torch.psf_modules import torchPSFStack, torchPSFStackTilts, torchTilts,torchDefocuses
-from pyPSFstack_torch.pupils.sources import torchDipoleInterfaceSource
-from pyPSFstack_torch.pupils.windows import torchDefocus, torchSEO
-from pyPSFstack_torch.pupils.aberrations import torchScalarAberrations, torchUnitaryAberrations, torchApodizedUnitary
-from pyPSFstack_torch.diversities.pupil_diversities import torchZDiversity
-from pyPSFstack_torch.diversities.pola_diversities import torchPDiversity_QWP, \
+from torchPSFstack.psf_modules import torchPSFStack, torchPSFStackTilts, torchTilts,torchDefocuses
+from torchPSFstack.pupils.sources import torchDipoleInterfaceSource
+from torchPSFstack.pupils.windows import torchDefocus, torchSEO
+from torchPSFstack.pupils.aberrations import torchScalarAberrations, torchUnitaryAberrations, torchApodizedUnitary
+from torchPSFstack.diversities.pupil_diversities import torchZDiversity
+from torchPSFstack.diversities.pola_diversities import torchPDiversity_QWP, \
     torchPDiversity_LP, torchPDiversity_Compound, torchPDiversity_GWP
-from pyPSFstack_torch.blurring.blurring import torchNoBlurring
-from pyPSFstack_torch.cost_functions import loss_loglikelihood, loss_sumsquared
+from torchPSFstack.blurring.blurring import torchNoBlurring
+from torchPSFstack.cost_functions import loss_loglikelihood, loss_sumsquared
 
-from pyPSFstack_torch.functions import get_pupils_param_dict, get_normNbck, colorize
+from torchPSFstack.functions import get_pupils_param_dict, get_normNbck, colorize
 
 fig_w = 16
 psf_cmap = 'inferno'
