@@ -16,7 +16,7 @@ class torchDipoleInterfaceSource(torchSource):
 
         if alpha is None:
             nr = nf/ni
-            alpha = (140*nr + 42*nr**3 + 42*nr**5 + 15*nr**7)/(140 + 84*nr**2 + 15*nr**4)
+            alpha = (11*nr**3 + 32*nr**5)/(3 + 16*nr**2 + 24*nr**4)
 
         self.alpha = alpha
         
