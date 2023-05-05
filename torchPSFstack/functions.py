@@ -24,8 +24,8 @@ from skimage.morphology import erosion, dilation
 def crop_center(input, size):
     x = input.shape[0]
     y = input.shape[1]
-    start_x = x//2-(size//2)
-    start_y = y//2-(size//2)
+    start_x = (x-size)//2
+    start_y = (y-size)//2
     return input[start_x:start_x+size,start_y:start_y+size,...]
 
 

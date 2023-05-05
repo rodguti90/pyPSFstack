@@ -8,10 +8,10 @@ def dag(array):
     return np.conj(np.swapaxes(array,-2,-1))
     
 def trim_stack(stack, N_new):
-    shape_stack = stack.shape
-    N_pts = shape_stack[0]
-    trimmed_stack = stack[(N_pts-N_new)//2:(N_pts+N_new)//2,
-                          (N_pts-N_new)//2:(N_pts+N_new)//2]
+    N_pts = stack.shape[0]
+    start_ind = (N_pts-N_new)//2
+    trimmed_stack = stack[start_ind:start_ind+N_new,
+                          start_ind:start_ind+N_new]
     return trimmed_stack
 
 def colorize(z, 
