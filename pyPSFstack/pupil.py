@@ -17,7 +17,8 @@ class Pupil():
     
     def xy_mesh(self, umax=1):
         u_vec = np.arange(-umax, umax, self.step_f)
-        return np.meshgrid(u_vec,u_vec)
+        ux, uy = np.meshgrid(u_vec,u_vec)
+        return ux, -uy
     
     def polar_mesh(self, umax=1):
         ux, uy = self.xy_mesh(umax=umax)

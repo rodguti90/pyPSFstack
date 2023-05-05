@@ -13,9 +13,9 @@ class torchPupil(nn.Module):
     def xy_mesh(self, umax=1):
         u_vec = torch.arange(-umax,
                         umax,
-                        self.step_f, dtype = torch.float32)
-        uy, ux = torch.meshgrid(u_vec,u_vec)
-        return ux, uy
+                        self.step_f, dtype = torch.float)
+        ux, uy = torch.meshgrid(u_vec,u_vec, indexing='xy')
+        return ux, -uy
 
     def polar_mesh(self, umax=1):
         ux, uy = self.xy_mesh(umax=umax)
