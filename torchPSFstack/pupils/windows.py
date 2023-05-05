@@ -91,7 +91,7 @@ def jones_seo(ux, uy, c=1.24*np.pi, phi=0, center=torch.tensor([0,0])):
     ur = torch.sqrt(uxt**2 + uyt**2)
     uphi = torch.atan2(uyt, uxt)
     pupil_array = torch.empty((ny,nx,2,2), dtype=torch.cfloat)
-    pupil_array[...,0,0] = torch.cos(c*ur/2) -1j*torch.sin(c*ur/2)*torch.cos(uphi-2*phi)
+    pupil_array[...,0,0] = torch.cos(c*ur/2) +1j*torch.sin(c*ur/2)*torch.cos(uphi-2*phi)
     pupil_array[...,0,1] = -1j*torch.sin(c*ur/2)*torch.sin(uphi-2*phi)
     pupil_array[...,1,0] = pupil_array[...,0,1]
     pupil_array[...,1,1] = torch.conj(pupil_array[...,0,0])
