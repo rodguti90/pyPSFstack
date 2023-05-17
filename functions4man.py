@@ -10,7 +10,8 @@ from pyPSFstack.functions import trim_stack
 from torchPSFstack.psf_modules import torchPSFStack, torchPSFStackTilts, torchTilts,torchDefocuses
 from torchPSFstack.pupils.sources import torchDipoleInterfaceSource
 from torchPSFstack.pupils.windows import torchDefocus, torchSEO
-from torchPSFstack.pupils.aberrations import torchScalarAberrations, torchUnitaryAberrations, torchApodizedUnitary
+from torchPSFstack.pupils.aberrations import torchScalarAberrations, \
+    torchUnitaryAberrations, torchApodizedUnitary, torchScalarPixels
 from torchPSFstack.diversities.pupil_diversities import torchZDiversity
 from torchPSFstack.diversities.pola_diversities import torchPDiversity_QWP, \
     torchPDiversity_LP, torchPDiversity_Compound, torchPDiversity_GWP
@@ -66,54 +67,64 @@ def plot_zstack(stack,N_z=5):
     cb_ax = fig.add_axes([0.91,0.13,0.01,0.75])
     fig.colorbar(im, cax=cb_ax)
 
-def plot_xyz(stack):
+def plot_xyz(stack, orientation='horizontal'):
     v_max = np.max(np.reshape(stack,(4,-1)),axis=1).reshape(4,1,1,1)
     stack /= v_max
     n_s = stack.shape[1]
     sc=20#30
-    fig, axs = plt.subplots(2,4, figsize=(2*fig_w/4,2*fig_w/8), gridspec_kw={'wspace':0.1, 'hspace':0}) 
+    
     arrowprops=dict(arrowstyle="<|-|>", color='white',linewidth=0.075*n_s)
     
-    for ind in range(4):
-        im = axs[0,ind].imshow(stack[ind][...,0],vmin=0,vmax=1,cmap=psf_cmap)
-        axs[0,ind].set_axis_off()
-        axs[0,ind].annotate("", xy=(n_s/sc, 3*n_s/sc), xytext=(10*n_s/sc, 3*n_s/sc),
-            arrowprops=arrowprops)
-        axs[1,ind].imshow(stack[ind][...,1],vmin=0,vmax=1,cmap=psf_cmap)
-        axs[1,ind].set_axis_off()
-        axs[1,ind].annotate("", xy=(3*n_s/sc,n_s/sc), xytext=(3*n_s/sc, 10*n_s/sc),
-            arrowprops=arrowprops)
-    
-    cb_ax = fig.add_axes([0.91,0.14,0.017,0.73])
-    fig.colorbar(im, cax=cb_ax)
-
-    im.figure.axes[1].tick_params(axis="x", labelsize=14)
-
-def plot_xyz_vert(stack):
-    v_max = np.max(np.reshape(stack,(4,-1)),axis=1).reshape(4,1,1,1)
-    stack /= v_max
-    n_s = stack.shape[1]
-    sc=30
-    fig, axs = plt.subplots(2,4, figsize=(2*fig_w/4,fig_w/4), gridspec_kw={'wspace':0.1, 'hspace':0}) 
-    arrowprops=dict(arrowstyle="<|-|>", color='white',linewidth=0.15*n_s)
+    if orientation=='horizontal':
+        fig, axs = plt.subplots(2,4, figsize=(2*fig_w/4,2*fig_w/8), gridspec_kw={'wspace':0.1, 'hspace':0}) 
+        cb_ax = fig.add_axes([0.91,0.14,0.017,0.73])
+    elif orientation=='vertical':
+        fig, axs = plt.subplots(4,2, figsize=(2*fig_w/8,2*fig_w/4), gridspec_kw={'wspace':0.1, 'hspace':0}) 
+        axs = axs.T
+        cb_ax = fig.add_axes([0.94,0.13,0.05,0.745])
+    else:
+        raise ValueError('Invalid option for orientation')
     
     for ind in range(4):
         im = axs[0,ind].imshow(stack[ind][...,0],vmin=0,vmax=1,cmap=psf_cmap)
         axs[0,ind].set_axis_off()
-        axs[0,ind].annotate("", xy=(n_s/sc, 3*n_s/sc), xytext=(10*n_s/sc, 3*n_s/sc),
-            arrowprops=arrowprops)
+        # axs[0,ind].annotate("", xy=(n_s/sc, 3*n_s/sc), xytext=(10*n_s/sc, 3*n_s/sc),
+        #     arrowprops=arrowprops)
         axs[1,ind].imshow(stack[ind][...,1],vmin=0,vmax=1,cmap=psf_cmap)
         axs[1,ind].set_axis_off()
-        axs[1,ind].annotate("", xy=(3*n_s/sc,n_s/sc), xytext=(3*n_s/sc, 10*n_s/sc),
-            arrowprops=arrowprops)
+        # axs[1,ind].annotate("", xy=(3*n_s/sc,n_s/sc), xytext=(3*n_s/sc, 10*n_s/sc),
+        #     arrowprops=arrowprops)
     
-    cb_ax = fig.add_axes([0.91,0.14,0.017,0.73])
+    # cb_ax = fig.add_axes([0.91,0.14,0.017,0.73])
     fig.colorbar(im, cax=cb_ax)
+
+    im.figure.axes[1].tick_params(axis="x", labelsize=18)
+
+# def plot_xyz_vert(stack):
+#     v_max = np.max(np.reshape(stack,(4,-1)),axis=1).reshape(4,1,1,1)
+#     stack /= v_max
+#     n_s = stack.shape[1]
+#     sc=20
+#     fig, axs = plt.subplots(4,2, figsize=(2*fig_w/8,2*fig_w/4), gridspec_kw={'wspace':0.1, 'hspace':0}) 
+#     arrowprops=dict(arrowstyle="<|-|>", color='white',linewidth=0.075*n_s)
+#     axs = axs.T
+#     for ind in range(4):
+#         im = axs[0,ind].imshow(stack[ind][...,0],vmin=0,vmax=1,cmap=psf_cmap)
+#         axs[0,ind].set_axis_off()
+#         axs[0,ind].annotate("", xy=(n_s/sc, 3*n_s/sc), xytext=(10*n_s/sc, 3*n_s/sc),
+#             arrowprops=arrowprops)
+#         axs[1,ind].imshow(stack[ind][...,1],vmin=0,vmax=1,cmap=psf_cmap)
+#         axs[1,ind].set_axis_off()
+#         axs[1,ind].annotate("", xy=(3*n_s/sc,n_s/sc), xytext=(3*n_s/sc, 10*n_s/sc),
+#             arrowprops=arrowprops)
+    
+#     cb_ax = fig.add_axes([0.91,0.14,0.017,0.73])
+#     fig.colorbar(im, cax=cb_ax)
 
 def cat_mat(mat):
     assert len(mat.shape)>=4
-    output = np.concatenate((mat[...,0],mat[...,1]), axis=0)
-    output = np.concatenate((output[...,0],output[...,1]), axis=1)
+    output = np.concatenate((mat[...,0],mat[...,1]), axis=1)
+    output = np.concatenate((output[...,0],output[...,1]), axis=0)
     return output
 
 def plot_jones(jones):
@@ -181,6 +192,8 @@ def find_pupil(data_stack, params, lr=3e-2, n_epochs = 200,
             twdw = torchApodizedUnitary(**params['pupil'], **params['aberrations'])
         elif abe=='scalar':
             twdw = torchScalarAberrations(**params['pupil'], **params['aberrations'])
+        elif abe=='scalar_pix':
+            twdw = torchScalarPixels(**params['pupil'])
         else:
             raise ValueError('Option not implmented')
         tpupil_sequence += [twdw]
