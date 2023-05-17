@@ -153,3 +153,22 @@ class torchScalarAberrations(torchScalarWindow):
         W = torch.sum(zernike_seq[...,1:self.jmax[1]]*self.c_W, -1)
 
         return self.get_aperture(dummy_ind=0)*Amp*torch.exp(1j*2*np.pi*W)
+    
+class torchScalarPixels(torchScalarWindow):
+
+    def __init__(self, aperture_size=.99, computation_size=4., 
+                 N_pts=128
+                 ):
+        super(torchScalarPixels, self).__init__(aperture_size, computation_size, N_pts)
+        
+        aperture = self.get_aperture()[...,0,0]
+        # n_opt_pix = len(aperture[aperture==1])
+
+        self.phase = nn.Parameter(torch.zeros(aperture.shape, requires_grad=True, dtype=torch.float))
+        self.A = nn.Parameter(torch.tensor(1., requires_grad=True, dtype=torch.float))
+        
+    
+    def get_pupil_array(self):
+        
+
+        return self.get_aperture(dummy_ind=0)*self.A*torch.exp(1j*2*np.pi*self.phase)
