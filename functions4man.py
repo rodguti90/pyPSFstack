@@ -10,8 +10,8 @@ from pyPSFstack.functions import trim_stack
 from torchPSFstack.psf_modules import torchPSFStack, torchPSFStackTilts, torchTilts,torchDefocuses
 from torchPSFstack.pupils.sources import torchDipoleInterfaceSource
 from torchPSFstack.pupils.windows import torchDefocus, torchSEO
-from torchPSFstack.pupils.aberrations import torchScalarAberrations, \
-    torchUnitaryAberrations, torchApodizedUnitary, torchScalarPixels
+from torchPSFstack.pupils.aberrations import torchScalarZernike, \
+    torchUnitaryZernike, torchUnitaryPixels, torchApodizedUnitary, torchScalarPixels
 from torchPSFstack.diversities.pupil_diversities import torchZDiversity
 from torchPSFstack.diversities.pola_diversities import torchPDiversity_QWP, \
     torchPDiversity_LP, torchPDiversity_Compound, torchPDiversity_GWP
@@ -171,7 +171,7 @@ def seq_cpx_corr(Yseq,Yref=None,mask=None):
 
 def find_pupil(data_stack, params, lr=3e-2, n_epochs = 200, 
                loss_fn=loss_loglikelihood, pdiv='qwplp', blurring=torchNoBlurring(), 
-               opt_def=True, opt_delta=False, abe='unitary', opt_a=False,
+               opt_def=True, opt_delta=False, abe='zernike', opt_a=False,
                tilts=False, defocuses=False, seo=False):
 
     tsrc = torchDipoleInterfaceSource(**params['pupil'],**params['source'],opt_delta=opt_delta)
@@ -186,12 +186,14 @@ def find_pupil(data_stack, params, lr=3e-2, n_epochs = 200,
         tpupil_sequence += [tseo]
 
     if abe is not None:
-        if abe=='unitary':
-            twdw = torchUnitaryAberrations(**params['pupil'], **params['aberrations'])
+        if abe=='zernike':
+            twdw = torchUnitaryZernike(**params['pupil'], **params['aberrations'])
+        elif abe=='pix':
+            twdw = torchUnitaryPixels(**params['pupil'])
         elif abe=='apodized':
             twdw = torchApodizedUnitary(**params['pupil'], **params['aberrations'])
         elif abe=='scalar':
-            twdw = torchScalarAberrations(**params['pupil'], **params['aberrations'])
+            twdw = torchScalarZernike(**params['pupil'], **params['aberrations'])
         elif abe=='scalar_pix':
             twdw = torchScalarPixels(**params['pupil'])
         else:
