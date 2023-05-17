@@ -6,12 +6,12 @@ import numpy as np
 from ..pupil import torchBirefringentWindow, torchScalarWindow
 from .zernike_functions import zernike_sequence, defocus_j
 
-class torchUnitaryAberrations(torchBirefringentWindow):
+class torchUnitaryZernike(torchBirefringentWindow):
 
     def __init__(self, c_W=None, c_q=None, aperture_size=.99, computation_size=4., 
-                 N_pts=128, jmax_list=[15]*5, index_convention='fringe'
+                 N_pts=128, jmax_list=[15]*5, index_convention='standard'
                  ):
-        super(torchUnitaryAberrations, self).__init__(aperture_size, computation_size, N_pts)
+        super(torchUnitaryZernike, self).__init__(aperture_size, computation_size, N_pts)
         
         self.jmax=jmax_list
         if c_q is None:
@@ -59,10 +59,91 @@ class torchUnitaryAberrations(torchBirefringentWindow):
 
         return ( Gamma[...,None,None] * Q)
 
+
+
+class torchScalarZernike(torchScalarWindow):
+
+    def __init__(self, aperture_size=.99, computation_size=4., 
+                 N_pts=128, jmax_list=[15]*2, index_convention='standard'
+                 ):
+        super(torchScalarZernike, self).__init__(aperture_size, computation_size, N_pts)
+        
+        tempA = torch.zeros((jmax_list[0]), dtype=torch.float)
+        tempA[0] = 1
+        self.c_A = nn.Parameter(tempA, requires_grad=True)
+
+        self.c_W = nn.Parameter(torch.zeros(jmax_list[1]-1, requires_grad=True, dtype=torch.float))
+        
+        self.jmax=jmax_list
+        self.index_convention = index_convention                  
+        self.defocus_j = defocus_j(index_convention)
+    
+    def get_pupil_array(self):
+        ux, uy = self.xy_mesh()
+        zernike_seq = zernike_sequence(np.max(self.jmax), 
+                                        self.index_convention, 
+                                        ux/self.aperture_size, 
+                                        uy/self.aperture_size)
+
+        Amp = torch.sum(self.c_A*zernike_seq[...,:self.jmax[0]], -1)
+        
+        W = torch.sum(zernike_seq[...,1:self.jmax[1]]*self.c_W, -1)
+
+        return self.get_aperture(dummy_ind=0)*Amp*torch.exp(1j*2*np.pi*W)
+
+
+class torchUnitaryPixels(torchBirefringentWindow):
+
+    def __init__(self, aperture_size=.99, computation_size=4., N_pts=128):
+        super(torchUnitaryPixels, self).__init__(aperture_size, computation_size, N_pts)
+        
+        aperture = self.get_aperture(dummy_ind=0)
+        N_pupil = aperture.shape[0]
+
+        self.W = nn.Parameter(torch.zeros([N_pupil,N_pupil], requires_grad=True, dtype=torch.float))
+        tempq = torch.zeros([4,N_pupil,N_pupil], dtype=torch.float)
+        tempq[0] = aperture
+        self.qs = nn.Parameter(tempq, requires_grad=True)
+    
+    def get_pupil_array(self):
+        
+        aperture = self.get_aperture(dummy_ind=0)
+        N_pupil = aperture.shape[0]
+
+        Q = torch.zeros((N_pupil,N_pupil,2,2), dtype=torch.cfloat)
+        Q[...,0,0] = self.qs[0] + 1j*self.qs[3]
+        Q[...,0,1] = self.qs[2] + 1j*self.qs[1]
+        Q[...,1,0] = -self.qs[2] + 1j*self.qs[1]
+        Q[...,1,1] = self.qs[0] - 1j*self.qs[3]
+
+        Gamma = aperture*torch.exp(1j*2*np.pi*self.W)
+
+        return (Gamma[...,None,None] * Q)
+
+
+class torchScalarPixels(torchScalarWindow):
+
+    def __init__(self, aperture_size=.99, computation_size=4., N_pts=128):
+        super(torchScalarPixels, self).__init__(aperture_size, computation_size, N_pts)
+        
+        aperture = self.get_aperture(dummy_ind=0)
+        # n_opt_pix = len(aperture[aperture==1])
+
+        self.phase = nn.Parameter(torch.zeros(aperture.shape, requires_grad=True, dtype=torch.float))
+        self.A = nn.Parameter(torch.tensor(1., requires_grad=True, dtype=torch.float))
+        
+    
+    def get_pupil_array(self):
+        
+
+        return self.get_aperture(dummy_ind=0)*self.A*torch.exp(1j*2*np.pi*self.phase)
+    
+
+
 class torchApodizedUnitary(torchBirefringentWindow):
 
     def __init__(self, c_A=None, c_W=None, c_q=None, aperture_size=.99, computation_size=4., 
-                 N_pts=128, jmax_list=[15]*5 +[1], index_convention='fringe'
+                 N_pts=128, jmax_list=[15]*5 +[1], index_convention='standard'
                  ):
         super(torchApodizedUnitary, self).__init__(aperture_size, computation_size, N_pts)
         
@@ -124,51 +205,3 @@ class torchApodizedUnitary(torchBirefringentWindow):
         Gamma = self.get_aperture(dummy_ind=0)*Amp*torch.exp(1j*2*np.pi*W)
 
         return ( Gamma[...,None,None] * Q/ normQ[...,None,None])
-
-class torchScalarAberrations(torchScalarWindow):
-
-    def __init__(self, aperture_size=.99, computation_size=4., 
-                 N_pts=128, jmax_list=[15]*2, index_convention='fringe'
-                 ):
-        super(torchScalarAberrations, self).__init__(aperture_size, computation_size, N_pts)
-        
-        tempq = torch.zeros((jmax_list[0]), dtype=torch.float)
-        tempq[0] = 1
-        self.c_A = nn.Parameter(tempq, requires_grad=True)
-        self.c_W = nn.Parameter(torch.zeros(jmax_list[1]-1, requires_grad=True, dtype=torch.float))
-        
-        self.jmax=jmax_list
-        self.index_convention = index_convention                  
-        self.defocus_j = defocus_j(index_convention)
-    
-    def get_pupil_array(self):
-        ux, uy = self.xy_mesh()
-        zernike_seq = zernike_sequence(np.max(self.jmax), 
-                                        self.index_convention, 
-                                        ux/self.aperture_size, 
-                                        uy/self.aperture_size)
-
-        Amp = torch.sum(self.c_A*zernike_seq[...,:self.jmax[0]], -1)
-        
-        W = torch.sum(zernike_seq[...,1:self.jmax[1]]*self.c_W, -1)
-
-        return self.get_aperture(dummy_ind=0)*Amp*torch.exp(1j*2*np.pi*W)
-    
-class torchScalarPixels(torchScalarWindow):
-
-    def __init__(self, aperture_size=.99, computation_size=4., 
-                 N_pts=128
-                 ):
-        super(torchScalarPixels, self).__init__(aperture_size, computation_size, N_pts)
-        
-        aperture = self.get_aperture()[...,0,0]
-        # n_opt_pix = len(aperture[aperture==1])
-
-        self.phase = nn.Parameter(torch.zeros(aperture.shape, requires_grad=True, dtype=torch.float))
-        self.A = nn.Parameter(torch.tensor(1., requires_grad=True, dtype=torch.float))
-        
-    
-    def get_pupil_array(self):
-        
-
-        return self.get_aperture(dummy_ind=0)*self.A*torch.exp(1j*2*np.pi*self.phase)
