@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from colorsys import hls_to_rgb
 from skimage.morphology import erosion, dilation
+import copy 
 
 # def cart2pol(x,y):
 #     rho = torch.sqrt(x**2 + y**2)
@@ -53,6 +54,10 @@ def get_pupils_param_dict(model):
             else:
                 curr_dic[name] = torch.Tensor.cpu(state[name]).numpy()
     
+    if 'tilts' in md_list:
+        dic['tilts'] = {}
+        for name in model.tilts.state_dict().keys():
+            dic['tilts'][name] =  (model.state_dict()['tilts'+'.'+name]).cpu().numpy()
     
     if 'pb_bck' in md_list:
         dic['pb_bck'] = {}
@@ -65,7 +70,7 @@ def get_pupils_param_dict(model):
             dic['blurring'][name] =  (model.state_dict()['blurring.bk'+'.'+name]).cpu().numpy()
             
 
-    return dic
+    return copy.deepcopy(dic)
 
 
 def outer_pixels(stack):
