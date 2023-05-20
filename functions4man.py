@@ -51,13 +51,17 @@ def plot_zpstack(stack, N_p=5, off_mid=0):
     cb_ax = fig.add_axes([0.91,0.13,0.01,0.75])
     fig.colorbar(im, cax=cb_ax)
 
-def plot_zstack(stack,N_z=5):
+def plot_zstack(stack,N_z=None):
     v_max = np.max(stack)
     v_min = np.min(stack)
-
+    
     n_z = stack.shape[-1]
     mid_ind = n_z//2
-    in_ind = mid_ind - N_z//2
+    if N_z is None:
+        N_z=n_z
+        in_ind = 0
+    else:
+        in_ind = mid_ind - N_z//2
     fig, axs = plt.subplots(1,N_z,figsize=(fig_w,fig_w/N_z), gridspec_kw={'wspace':0.05, 'hspace':0})
     for ind in range(in_ind,in_ind+N_z):
         im = axs[ind-in_ind].imshow(stack[...,ind],vmin=v_min,vmax=v_max,cmap=psf_cmap)
@@ -217,7 +221,7 @@ def find_pupil(data_stack, params, lr=3e-2, n_epochs = 200,
         
         sh_divs = [len(params['zdiversity']['z_list']), len(tpdiv.jones_list)]
 
-    elif pdiv is None:
+    else:
         tzdiv = torchZDiversity(**params['zdiversity_np'], **params['pupil'])
         tpdiv=None
         sh_divs = [len(params['zdiversity_np']['z_list'])]
