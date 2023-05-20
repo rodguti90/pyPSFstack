@@ -1,9 +1,34 @@
+"""Module defining the kernel classes used for the blurring."""
 import numpy as np
 from scipy.special import jv, j1, spherical_jn
 from math import factorial
 from ..pupil import BlurringKernel
 
 class BKSphere(BlurringKernel):
+    """BlurringKernel subclass used to define the kernels for exact blurring 
+    given a spherical emission by the bead.
+    
+    Parameters
+    ----------
+    diff_del_list : list or ndarray
+        List of slices to use for the computation of the z integral
+        for the exact blurring model.
+    radius : float
+        Radius of the fluorescent bead. 
+    nf : float
+        Index of refraction for the immersion medium of the microscope objective.
+    aperture_size : float
+        Normalized value for the aperture at the BFP i.e. NA/nf
+    computation_size : float
+        The total size at the BFP used for computation.
+    N_pts : int
+        Number of points used for the computation.
+    
+    Methods
+    -------
+    get_pupil_array()
+        Computes the pupil array.
+    """
     def __init__(self, 
                  diff_del_list,
                  radius,
@@ -11,7 +36,24 @@ class BKSphere(BlurringKernel):
                  aperture_size=2.,
                  computation_size=4,
                  N_pts=128):
-
+        """Constructor.
+        
+        Parameters
+        ----------
+        diff_del_list : list or ndarray
+            List of slices to use for the computation of the z integral
+            for the exact blurring model.
+        radius : float
+            Radius of the fluorescent bead. 
+        nf : float
+            Index of refraction for the immersion medium of the microscope objective.
+        aperture_size : float
+            Normalized value for the aperture at the BFP i.e. NA/nf
+        computation_size : float
+            The total size at the BFP used for computation.
+        N_pts : int
+            Number of points used for the computation.
+        """
         BlurringKernel.__init__(self, aperture_size, computation_size, N_pts)
         self.diff_del_list = diff_del_list
         self.nf = nf
@@ -30,6 +72,29 @@ class BKSphere(BlurringKernel):
 
 
 class BKSASphere(BlurringKernel):
+    """BlurringKernel subclass used to define the kernels for semi-analytic 
+    blurring for a spherical emission by the bead.
+    
+    Parameters
+    ----------
+    radius : float
+        Radius of the fluorescent bead. 
+    nf : float
+        Index of refraction for the immersion medium of the microscope objective.
+    l_max : int
+        l_max == m//2 defines the number of terms used in teh expansion.
+    aperture_size : float
+        Normalized value for the aperture at the BFP i.e. NA/nf
+    computation_size : float
+        The total size at the BFP used for computation.
+    N_pts : int
+        Number of points used for the computation.
+    
+    Methods
+    -------
+    get_pupil_array()
+        Computes the pupil array.
+    """
     def __init__(self, 
                  m,
                  radius,
@@ -37,7 +102,24 @@ class BKSASphere(BlurringKernel):
                  aperture_size=2.,
                  computation_size=4,
                  N_pts=128):
-
+        """Constructor.
+        
+        Parameters
+        ----------
+        m : int
+            Integer identifying the order to use for the semianalyticl method. 
+            m=0 produces a 2D blurring based on a convolution.
+        radius : float
+            Radius of the fluorescent bead. 
+        nf : float
+            Index of refraction for the immersion medium of the microscope objective.
+        aperture_size : float
+            Normalized value for the aperture at the BFP i.e. NA/nf
+        computation_size : float
+            The total size at the BFP used for computation.
+        N_pts : int
+            Number of points used for the computation.
+        """
         BlurringKernel.__init__(self, aperture_size, computation_size, N_pts)
         self.l_max = m//2
         self.nf = nf

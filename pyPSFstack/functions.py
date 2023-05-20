@@ -1,3 +1,4 @@
+"""Module containing some auxilary functions"""
 import numpy as np
 from colorsys import hls_to_rgb
 # from scipy.optimize import minimize
@@ -5,9 +6,39 @@ from colorsys import hls_to_rgb
 
 
 def dag(array):
+    """Returns the complex transpose of an array.
+    
+    It assumes the matrix indices are contained in the last two indices.
+    
+    Parameters
+    ----------
+    array : ndarray
+        Array to be transposed
+        
+    Returns
+    -------
+    ndarray
+        Transformed array.
+    """
     return np.conj(np.swapaxes(array,-2,-1))
     
 def trim_stack(stack, N_new):
+    """Trims an array to anew one of reduced size.
+
+    It assumes the image indices are the two frist ones.
+
+    Parameters
+    ----------
+    stack : ndarray
+        Stack of PSFs to be trimmed.
+    N_new : int
+        New size of the trimmed stack.
+
+    Returns
+    -------
+    trimmed_stack : ndarray
+        Trimmed array.
+    """
     N_pts = stack.shape[0]
     start_ind = (N_pts-N_new)//2
     trimmed_stack = stack[start_ind:start_ind+N_new,
@@ -21,7 +52,34 @@ def colorize(z,
              transparent=False, 
              alpha=1., 
              max_threshold=1):
-             
+    """Transforms a complex valued array into an rgb one.
+    
+    The phase is encoded as hue and the amplitude as lightness. 
+
+    Parameters
+    ----------
+        z : ndarray
+            Complex valued array.
+        theme : {'dark', 'white'}, optional
+            For 'dark' the lightness value tends to zero as the amplitude 
+            diminishes and for 'white' it tends to one. 
+        saturation : float
+            Defines the saturation for hls
+        beta : float
+            Controls the scaling of lightness with respect to amplitude.
+        transparent : bool, optional
+            Whether to modify the alpha channel according to the amplitud.
+        alpha : float
+            Scaling for alpha channel controlling the opacity, 
+            'transparent' must be set to True.
+        max_threshold : float
+            Can be used to change the range for shown for the amplitude.
+
+    Returns
+    -------
+    c : ndarray
+        Returned array transformed into rgb format. 
+    """
     r = np.abs(z)
     r /= max_threshold*np.max(np.abs(r))
     arg = np.angle(z) 

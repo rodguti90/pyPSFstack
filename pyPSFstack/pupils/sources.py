@@ -1,17 +1,68 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Dec 19 18:31:35 2021
+"""Module containing the definitions for the sources.
 
-@author: rodrigo
+Notes
+-----
+Sources do not need a forward method.
 """
 import numpy as np
 from ..pupil import Pupil
 
 
 class DipoleInterfaceSource(Pupil):
+    """Pupil subclass used for defining the Green tensor of a dipolar source near an interface.
+    
+    DipoleInterfaceSource defines the Green tensor at the back focal plane 
+    for a point dipolar source located near an interface between its embedding
+    medium and the immersion medium for the objective. This expression takes
+    into account the supercritical angle radiation and the Fresnel coefficients.
+
+    Attributes
+    ----------
+    aperture_size : float
+        Normalized value for the aperture at the BFP i.e. NA/nf
+    computation_size : float
+        The total size at the BFP used for computation.
+    N_pts : int
+        Number of points used for the computation.
+    step_f : float
+        Step size of at the BFP.
+    ni : float
+        Index of refraction for the embedding medium of the source.
+    nf : float
+        Index of refraction for the immersion medium of the microscope objective.
+    delta : float
+        Distance of the dipole to the interface difined as positive in units of wavelength.
+    alpha : float
+        Parameter defining the reference focal plane. 
+    
+    Methods
+    -------
+    get_pupil_array()
+        Computes the pupil array.
+    plot_pupil_field()
+        Plots specified components of the array for the pupil.
+    """
     def __init__(self, aperture_size=1., computation_size=4., 
                  N_pts=128, ni=1.33, nf=1.518, delta=0.1, alpha=None):
+        """Constructor.
+
+        Parameters
+        ----------
+        aperture_size : float
+            Normalized value for the aperture at the BFP i.e. NA/nf
+        computation_size : float
+            The total size at the BFP used for computation.
+        N_pts : int
+            Number of points used for the computation.
+        ni : float
+            Index of refraction for the embedding medium of the source.
+        nf : float
+            Index of refraction for the immersion medium of the microscope objective.
+        delta : float
+            Distance of the dipole to the interface difined as positive in units of wavelength.
+        alpha : float
+            Parameter defining the reference focal plane. 
+        """
         Pupil.__init__(self, aperture_size, computation_size, N_pts)
         
         self.ni = ni
@@ -34,7 +85,8 @@ class DipoleInterfaceSource(Pupil):
         return aperture * saf_defocus * green      
 
 def compute_SAF_defocus(ur, ni, nf, delta, alpha):
-
+    """Defines the scalar terms containing the SAF and defocus.
+    """
     N_pts = ur.shape[0]
     saf_defocus = np.empty((N_pts,N_pts,1,1), dtype=np.cfloat)
 
@@ -44,16 +96,7 @@ def compute_SAF_defocus(ur, ni, nf, delta, alpha):
     return saf_defocus
 
 def compute_green(ux, uy, ni, nf):
-    """
-    green_BFP calculates the Green tensor at the BFP taking into account 
-    the supercritical radiation 
-    The distance to the coverslip needs to be specified as a positive number
-    since the origin is placed at the glass/medium boundary. In the same vein
-    the focal plane is located at the same boundary. In order to consider
-    another focal plane we need to multiply the Green tensor by the
-    corresponding phase factor where a positive distance means that the
-    focal plane is in the immersion medium. Conversly if it is negative then
-    the focal plane is in the suspension medium (where the particles are).
+    """Defines the matrix components of the Green tensor at the BFP.
     """
     np.seterr(divide='ignore', invalid='ignore')
     
