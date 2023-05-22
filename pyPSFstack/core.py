@@ -91,9 +91,10 @@ class PSFStack():
             self.psf_stack = output
 
     def _compute_compound_pupils(self):
-        output = self.pupils[0].get_pupil_array()
+        # output = self.pupils[0].get_pupil_array()
+        output = self.pupils[0]._forward()
         for ind in range(self.N_pupils-1):
-            output = self.pupils[ind+1].forward(output)
+            output = self.pupils[ind+1]._forward(output)
         return output
 
     def _propagate_image_plane(self, input):

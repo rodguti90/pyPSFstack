@@ -103,6 +103,29 @@ class PupilDiversity(Pupil):
             * np.expand_dims(pupil_array,list(np.arange(2,dims-2,1))+[-2,-1])
         return output
 
+class Source(Pupil):
+    """Pupil subclass for sources."""
+    def __init__(self, 
+                 aperture_size=1., 
+                 computation_size=4., 
+                 N_pts=128):
+                 
+        Pupil.__init__(self, aperture_size, computation_size, N_pts)
+    
+    def plot_pupil_field(self):
+        """Plots specified components of the array for the pupil."""
+        pupil = self.get_pupil_array()
+        sh = pupil.shape
+        fig, axs = plt.subplots(sh[-2], sh[-1], figsize=(4*sh[-1],4*sh[-2]))
+        for r in range(sh[-2]):
+            for c in range(sh[-1]):
+                axs[r,c].imshow(colorize(pupil[...,r,c]))
+                axs[r,c].set_axis_off()
+        fig.show()
+
+    def _forward(self):
+        return self.get_pupil_array()
+    
 class BirefringentWindow(Pupil):
     """Pupil subclass for birefringent windows."""
     def __init__(self, 
