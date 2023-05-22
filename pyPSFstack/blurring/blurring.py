@@ -21,7 +21,7 @@ class Blurring():
         Returns the blurred PSFs provided as input.
     """
     def __init__(self):
-        """Constructor."""     
+        """Constructor."""
         self.diversity = NoDiversity()  
     
     def compute_blurred_psfs(self, input):
@@ -171,12 +171,9 @@ class SABlurring(Blurring):
         ----------
         radius : float
             Radius of the fluorescent bead.
-        m_max : int 
+        m : int 
             Integer identifying the order to use for the semianalyticl method. 
-            m_max=0 produces a 2D blurring based on a convolution. 
-        diff_del_list : list or ndarray
-            List of slices to use for the computation of the z integral
-            for the exact blurring model.
+            m=0 produces a 2D blurring based on a convolution. 
         emission : {'sphere'}, optional
             Moddel to use for the emission. Only the sphere model has been
             implemented, shell model to come.  
@@ -190,7 +187,6 @@ class SABlurring(Blurring):
             The total size at the BFP used for computation.
         N_pts : int
             Number of points used for the computation.
-
         """
         self.diversity = DerivativeDiversity(m=m, 
                                     ni=ni, 

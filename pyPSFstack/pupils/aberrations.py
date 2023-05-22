@@ -25,6 +25,8 @@ class UnitaryZernike(BirefringentWindow):
         Number of points used for the computation.
     step_f : float
         Step size of at the BFP.
+    jmax_list : list
+        List containing the number of Zernikes used for each component
     index_convention : {'standard','fringe'}, optional
         Defines which single index convention to use for the Zernike polynomials.
     defocus_j : int
@@ -55,13 +57,6 @@ class UnitaryZernike(BirefringentWindow):
             Number of points used for the computation.
         index_convention : {'standard','fringe'}, optional
             Defines which single index convention to use for the Zernike polynomials.
-        
-        Methods
-        -------
-        get_pupil_array()
-            Computes the pupil array.
-        plot_pupil_field()
-            Plots specified components of the array for the pupil.
         """
         BirefringentWindow.__init__(self, aperture_size, computation_size, N_pts)
         
@@ -201,6 +196,8 @@ class ScalarZernike(ScalarWindow):
         Number of points used for the computation.
     step_f : float
         Step size of at the BFP.
+    jmax_list : list
+        List containing the number of Zernikes used for each component
     index_convention : {'standard','fringe'}, optional
         Defines which single index convention to use for the Zernike polynomials.
     defocus_j : int
@@ -285,7 +282,7 @@ class ScalarPixels(ScalarWindow):
     plot_pupil_field()
         Plots specified components of the array for the pupil.
     """
-    def __init__(self, W, qs, aperture_size=1., computation_size=4., 
+    def __init__(self, W, aperture_size=1., computation_size=4., 
                  N_pts=128):
         """Constructor.
         
@@ -303,7 +300,6 @@ class ScalarPixels(ScalarWindow):
         ScalarWindow.__init__(self, aperture_size, computation_size, N_pts)
         
         self.W = W
-        self.qs = qs
 
     def get_pupil_array(self): 
         aperture = self.get_aperture(dummy_ind=0)

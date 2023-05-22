@@ -1,14 +1,10 @@
 """Module containing the definitions for the sources.
-
-Notes
------
-Sources do not need a forward method.
 """
 import numpy as np
-from ..pupil import Pupil
+from ..pupil import Source
 
 
-class DipoleInterfaceSource(Pupil):
+class DipoleInterfaceSource(Source):
     """Pupil subclass used for defining the Green tensor of a dipolar source near an interface.
     
     DipoleInterfaceSource defines the Green tensor at the back focal plane 
@@ -63,7 +59,7 @@ class DipoleInterfaceSource(Pupil):
         alpha : float
             Parameter defining the reference focal plane. 
         """
-        Pupil.__init__(self, aperture_size, computation_size, N_pts)
+        Source.__init__(self, aperture_size, computation_size, N_pts)
         
         self.ni = ni
         self.nf = nf

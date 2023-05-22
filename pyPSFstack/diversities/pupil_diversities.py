@@ -66,7 +66,7 @@ class ZDiversity(PupilDiversity):
     
 
 class DDiversity(PupilDiversity):
-    """PupilDiversity subclass defining the phase diversity given by defocus.
+    """PupilDiversity subclass defining the phase diversity for z0 N defocus for blurring.
     
     Attributes
     ----------
@@ -130,7 +130,7 @@ class DDiversity(PupilDiversity):
                       *(1-(self.nf*ur/self.ni)**2)**(1/2)) 
 
 class DerivativeDiversity(PupilDiversity):
-    """PupilDiversity subclass defining the phase diversity given by defocus.
+    """PupilDiversity subclass defining the scalar diversity for derivative with respect to z0.
     
     Attributes
     ----------
