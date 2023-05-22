@@ -1,3 +1,5 @@
+"""Module containing the definitions for the torch sources.
+"""
 import torch
 import torch.nn as nn
 
@@ -7,11 +9,64 @@ from ..pupil import torchSource
 
 
 class torchDipoleInterfaceSource(torchSource):
+    """Pupil subclass used for defining the Green tensor of a dipolar source near an interface.
+    
+    DipoleInterfaceSource defines the Green tensor at the back focal plane 
+    for a point dipolar source located near an interface between its embedding
+    medium and the immersion medium for the objective. This expression takes
+    into account the supercritical angle radiation and the Fresnel coefficients.
 
+    Attributes
+    ----------
+    aperture_size : float
+        Normalized value for the aperture at the BFP i.e. NA/nf
+    computation_size : float
+        The total size at the BFP used for computation.
+    N_pts : int
+        Number of points used for the computation.
+    step_f : float
+        Step size of at the BFP.
+    ni : float
+        Index of refraction for the embedding medium of the source.
+    nf : float
+        Index of refraction for the immersion medium of the microscope objective.
+    delta : Tensor
+        Distance of the dipole to the interface difined as positive in units of wavelength.
+    alpha : float
+        Parameter defining the reference focal plane. 
+    
+    Methods
+    -------
+    get_pupil_array()
+        Computes the pupil array.
+    plot_pupil_field()
+        Plots specified components of the array for the pupil.
+    """
     def __init__(self, aperture_size=1, computation_size=4., 
                  N_pts=128, ni=1.33, nf=1.518, delta=0.1, 
                  alpha=None, opt_delta=False
                  ):
+        """Constructor.
+
+        Parameters
+        ----------
+        aperture_size : float
+            Normalized value for the aperture at the BFP i.e. NA/nf
+        computation_size : float
+            The total size at the BFP used for computation.
+        N_pts : int
+            Number of points used for the computation.
+        ni : float
+            Index of refraction for the embedding medium of the source.
+        nf : float
+            Index of refraction for the immersion medium of the microscope objective.
+        delta : float
+            Distance of the dipole to the interface difined as positive in units of wavelength.
+        alpha : float
+            Parameter defining the reference focal plane. 
+        opt_delta : bool
+            Whether to add delta to the optimization parameters.
+        """
         super(torchDipoleInterfaceSource, self).__init__(aperture_size, computation_size, N_pts)
 
         if alpha is None:

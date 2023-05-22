@@ -1,9 +1,40 @@
+"""Module containing the definition for all torchPupil abstract classes.
+"""
 import torch
 import torch.nn as nn
 
 
 class torchPupil(nn.Module):
+    """torchPupil superclass.
+
+    Attributes
+    ----------
+    aperture_size : float
+        Normalized value for the aperture at the BFP i.e. NA/nf
+    computation_size : float
+        The total size at the BFP used for computation.
+    N_pts : int
+        Number of points used for the computation.
+    step_f : float
+        Step size of at the BFP.
+    
+    Methods
+    -------
+    get_pupil_array()
+        Computes the pupil array.
+    """
     def __init__(self, aperture_size, computation_size, N_pts):
+        """Constructor.
+
+        Parameters
+        ----------
+        aperture_size : float
+            Normalized value for the aperture at the BFP i.e. NA/nf
+        computation_size : float
+            The total size at the BFP used for computation.
+        N_pts : int
+            Number of points used for the computation.
+        """
         super(torchPupil, self).__init__()
         self.aperture_size = aperture_size 
         self.computation_size = computation_size
@@ -32,9 +63,17 @@ class torchPupil(nn.Module):
         return aperture
 
     def get_pupil_array(self):       
+        """Computes the pupil array.
+        
+        Returns
+        -------
+        Tensor
+            Complex torch tensor for the pupil sampled accordimng to its parameters.
+        """  
         raise NotImplementedError("Please Implement this method")
 
 class torchPupilDiversity(torchPupil):
+    """torchPupil subclass for defining scalar diversities."""
     def __init__(self, 
                  aperture_size=1., 
                  computation_size=4., 
@@ -50,6 +89,7 @@ class torchPupilDiversity(torchPupil):
         return output
 
 class torchSource(torchPupil):
+    """torchPupil subclass for defining sources."""
     def __init__(self, 
                  aperture_size=1., 
                  computation_size=4., 
@@ -60,6 +100,7 @@ class torchSource(torchPupil):
         return self.get_pupil_array()
 
 class torchScalarWindow(torchPupil):
+    """torchPupil subclass for defining scalar windows."""
     def __init__(self, 
                  aperture_size=1., 
                  computation_size=4., 
@@ -72,6 +113,7 @@ class torchScalarWindow(torchPupil):
 
 
 class torchBirefringentWindow(torchPupil):
+    """torchPupil subclass for birefringent windows."""
     def __init__(self, 
                  aperture_size=1., 
                  computation_size=4., 
@@ -82,6 +124,7 @@ class torchBirefringentWindow(torchPupil):
         return self.get_pupil_array() @ input
 
 class torchBlurringKernel(torchPupil):
+    """torchPupil subclass for defining blurring kernels."""
     def __init__(self, 
                  aperture_size=1., 
                  computation_size=4., 

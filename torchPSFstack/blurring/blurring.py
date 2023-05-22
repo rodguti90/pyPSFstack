@@ -6,24 +6,61 @@ from ..diversities.pupil_diversities import torchNoDiversity, torchDerivativeDiv
 from ..blurring.kernels import torchBKSASphere, torchBK2DSphere
 
 class torchBlurring(nn.Module):
+    """torchBlurring superclass.
+    
+    Attributes
+    ----------
+    diversity : torchPupilDiversity class
+        Diversity that needs to be taken into account at the 
+        BFP to comput blurring.
+
+    Methods
+    -------
+    compute_blurred_psfs(input)
+        Returns the blurred PSFs provided as input.
+    """
     def __init__(self):
+        """Constructor."""
         super(torchBlurring, self).__init__()
         
         self.diversity = torchNoDiversity()  
 
     def compute_blurred_psfs(self, input):
+        """Returns the blurred PSFs provided as input.
+
+        Parameters
+        ----------
+        input : Tensor
+            Array with a stack of PSFs
+
+        Returns
+        -------
+        Tensor
+            Array with the stack of blurred PSFs
+        """
         raise NotImplementedError("Please Implement this method")
 
     def _compute_intensity(self, input):
         return torch.sum(torch.abs(input)**2,dim=(-2,-1))
 
 class torchNoBlurring(torchBlurring):
-
+    """"torchBlurring subclass representing the absence of blurring."""
     def forward(self, input):
         return self._compute_intensity(input)
 
 class torch2DBlurring(torchBlurring):
+    """"torchBlurring subclass representing the 2D model for bluring.
+    
+    Attributes
+    ----------
+    bk : torchBlurringKernel class
+        Pupil object representing the blurring kernel to be used.
 
+    Methods
+    -------
+    compute_blurred_psfs(input)
+        Returns the blurred PSFs provided as input.
+    """
     def __init__(self,
                  radius=0.,
                  emission='sphere',
@@ -33,7 +70,26 @@ class torch2DBlurring(torchBlurring):
                  N_pts=128,
                  opt_radius=False
                  ):
-
+        """Constructor.
+        
+        Parameters
+        ----------
+        radius : float
+            Radius of the fluorescent bead.
+        emission : {'sphere'}, optional
+            Moddel to use for the emission. Only the sphere model has been
+            implemented, shell model to come.  
+        nf : float
+            Index of refraction for the immersion medium of the microscope objective.
+        aperture_size : float
+            Normalized value for the aperture at the BFP i.e. NA/nf
+        computation_size : float
+            The total size at the BFP used for computation.
+        N_pts : int
+            Number of points used for the computation.
+        opt_radius : bool, optional
+            Whether to ass the radius paramter to the optimization.
+        """
         super(torch2DBlurring, self).__init__()
 
 
@@ -53,7 +109,23 @@ class torch2DBlurring(torchBlurring):
 
 
 class torchSABlurring(torchBlurring):
+    """"torchBlurring subclass representing the secon-order semi-analytic model for bluring.
 
+    
+    Attributes
+    ----------
+    diversity : torchPupilDiversity class
+        Diversity computing the PSFs at varying distance from th 
+        interface in order to perform the integral over the volume 
+        of the fluorescent bead.
+    bk : BlurringKernel class
+        Pupil object representing the blurring kernel to be used.
+
+    Methods
+    -------
+    compute_blurred_psfs(input)
+        Returns the blurred PSFs provided as input.
+    """
     def __init__(self,
                  radius=0.,
                  emission='sphere',
@@ -64,7 +136,28 @@ class torchSABlurring(torchBlurring):
                  N_pts=128,
                  opt_radius=False
                  ):
-
+        """Constructor.
+        
+        Parameters
+        ----------
+        radius : float
+            Radius of the fluorescent bead.
+        emission : {'sphere'}, optional
+            Moddel to use for the emission. Only the sphere model has been
+            implemented, shell model to come.  
+        ni : float
+            Index of refraction for the embedding medium of the source.
+        nf : float
+            Index of refraction for the immersion medium of the microscope objective.
+        aperture_size : float
+            Normalized value for the aperture at the BFP i.e. NA/nf
+        computation_size : float
+            The total size at the BFP used for computation.
+        N_pts : int
+            Number of points used for the computation.
+        opt_radius : bool, optional
+            Whether to ass the radius paramter to the optimization.
+        """
         super(torchSABlurring, self).__init__()
 
         self.diversity = torchDerivativeDiversity(

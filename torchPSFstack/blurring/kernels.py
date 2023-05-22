@@ -1,10 +1,31 @@
+"""Module defining the torch kernel classes used for the blurring."""
 import torch
-
 from ..pupil import torchBlurringKernel
 import torch.nn as nn
 
 
 class torchBK2DSphere(torchBlurringKernel):
+    """torchBlurringKernel subclass used to define the kernel for the second-order semi-analytic 
+    blurring for a spherical emission by the bead.
+    
+    Parameters
+    ----------
+    radius : float
+        Radius of the fluorescent bead. 
+    nf : float
+        Index of refraction for the immersion medium of the microscope objective.
+    aperture_size : float
+        Normalized value for the aperture at the BFP i.e. NA/nf
+    computation_size : float
+        The total size at the BFP used for computation.
+    N_pts : int
+        Number of points used for the computation.
+    
+    Methods
+    -------
+    get_pupil_array()
+        Computes the pupil array.
+    """
     def __init__(self, 
                  radius,
                  nf,
@@ -12,7 +33,23 @@ class torchBK2DSphere(torchBlurringKernel):
                  computation_size=4,
                  N_pts=128,
                  opt_radius=False):
-
+        """Constructor.
+        
+        Parameters
+        ----------
+        radius : float
+            Radius of the fluorescent bead. 
+        nf : float
+            Index of refraction for the immersion medium of the microscope objective.
+        aperture_size : float
+            Normalized value for the aperture at the BFP i.e. NA/nf
+        computation_size : float
+            The total size at the BFP used for computation.
+        N_pts : int
+            Number of points used for the computation.
+        opt_radius : bool, optional
+            Whether to ass the radius paramter to the optimization.
+        """
         super(torchBK2DSphere, self).__init__(aperture_size, computation_size, N_pts)
         
         self.nf = nf
@@ -31,6 +68,27 @@ class torchBK2DSphere(torchBlurringKernel):
         return bk * ap
 
 class torchBKSASphere(torchBlurringKernel):
+    """torchBlurringKernel subclass used to define the kernel for the second-order semi-analytic 
+    blurring for a spherical emission by the bead.
+    
+    Parameters
+    ----------
+    radius : float
+        Radius of the fluorescent bead. 
+    nf : float
+        Index of refraction for the immersion medium of the microscope objective.
+    aperture_size : float
+        Normalized value for the aperture at the BFP i.e. NA/nf
+    computation_size : float
+        The total size at the BFP used for computation.
+    N_pts : int
+        Number of points used for the computation.
+    
+    Methods
+    -------
+    get_pupil_array()
+        Computes the pupil array.
+    """
     def __init__(self, 
                  radius,
                  nf,
@@ -39,7 +97,23 @@ class torchBKSASphere(torchBlurringKernel):
                  N_pts=128,
                  opt_radius=False
                  ):
-
+        """Constructor.
+        
+        Parameters
+        ----------
+        radius : float
+            Radius of the fluorescent bead. 
+        nf : float
+            Index of refraction for the immersion medium of the microscope objective.
+        aperture_size : float
+            Normalized value for the aperture at the BFP i.e. NA/nf
+        computation_size : float
+            The total size at the BFP used for computation.
+        N_pts : int
+            Number of points used for the computation.
+        opt_radius : bool, optional
+            Whether to ass the radius paramter to the optimization.
+        """
         super(torchBKSASphere, self).__init__(aperture_size, computation_size, N_pts)
         
         self.nf = nf
@@ -61,6 +135,7 @@ class torchBKSASphere(torchBlurringKernel):
         return bk * ap
 
 def ja1(x):
+    """Analytical implementationof spherical Bessel function."""
     l_val = x > 0.1
     s_val = torch.logical_not(l_val)
     output = torch.zeros_like(x)
@@ -72,6 +147,7 @@ def ja1(x):
 
 
 def ja2(x):
+    """Analytical implementationof spherical Bessel function."""
     l_val = x > 0.1
     s_val = torch.logical_not(l_val)
     output = torch.zeros_like(x)
