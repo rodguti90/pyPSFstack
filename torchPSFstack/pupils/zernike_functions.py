@@ -1,3 +1,4 @@
+"""Module defining the torch Zernike polynomials and auxilary functions."""
 from math import factorial
 import torch
 import numpy as np
@@ -5,11 +6,43 @@ import numpy as np
 
 
 def cart2pol(x,y):
+    """Transform cartesian array into polar.
+    
+    Parameters
+    ----------
+    x : Tensor
+        Array for the x coordinate.
+    y : Tensor
+        Array for the y coordinate.
+
+    Returns
+    -------
+    rho : Tensor
+        Array for the radial coordinate.
+    phi : Tensor
+        Array for the azimuthal coordinate.
+    """
     rho = torch.sqrt(x**2 + y**2)
     phi = torch.atan2(y, x)
     return rho, phi
 
 def radial_zernike(n,m,rho):
+    """Computes the radial Zenike polynomial.
+
+    Parmaters
+    ---------
+    n : int
+        The radial index.
+    m : int
+        Azimuthal index
+    rho : Tensor
+        Radial variable
+
+    Returns
+    -------
+    pol : Tensor
+        Array containing the radial Zernike polynomial.
+    """
     #check that n-m is even
     assert (n-m)%2 == 0 & isinstance(n,int) & isinstance(m,int), \
         'n and m need to be ints and n-m even'
@@ -21,6 +54,24 @@ def radial_zernike(n,m,rho):
     return pol
 
 def zernike_Z(n,m,x,y):
+    """Computes the Zenike polynomial.
+
+    Parmaters
+    ---------
+    n : int
+        The radial index.
+    m : int
+        Azimuthal index
+    x : Tensor
+        Array for the x coordinate.
+    y : Tensor
+        Array for the y coordinate.
+
+    Returns
+    -------
+    polZ : Tensor
+        Array containing the radial Zernike polynomial.
+    """
     assert x.shape == y.shape
     rho, phi = cart2pol(x,y)
     if m > 0:
@@ -34,6 +85,24 @@ def zernike_Z(n,m,x,y):
     return np.sqrt((2*n+2)/np.pi)*polZ
 
 def zernike_sequence(j_max, convention, x, y):
+    """Computes a all Zernike polynomials with index < j_max.
+
+    Parameters
+    ----------
+    j_max : int
+        Number of Zernikes to include in teh sequence.
+    convention : {'standard','fringe'}
+        Defines which single index convention to use for the Zernike polynomials.
+    x : Tensor
+        Array for the x coordinate.
+    y : Tensor
+        Array for the y coordinate. 
+
+    Returns
+    -------
+    z_seq : Tensor
+        Array of j_max Zernike polynomials evaluated at points x and y.
+    """
     y_size, x_size = x.shape 
     z_seq = torch.empty((y_size,x_size,j_max))
     for j in range(j_max):
@@ -47,6 +116,17 @@ def zernike_sequence(j_max, convention, x, y):
     return z_seq
 
 def defocus_j(convention):
+    """Returns the index for defocus in a single index given convention.
+    
+    Parameters
+    ----------
+    convention : {'standard','fringe'}
+
+    Returns
+    -------
+    int 
+        Index for defocus Zernike polynomial for the chosen convention.
+    """
     if convention == 'fringe':
         return 3
     elif convention == 'standard':
@@ -55,11 +135,39 @@ def defocus_j(convention):
         raise NotImplementedError("The chosen convention is not implemented")
         
 def standard2nm(j):
+    """Gives the two indices n and m corresponding to the index for standard convention.
+    
+    Parameters
+    ----------
+    j : int 
+        Index for standard convention
+
+    Returns
+    -------
+    n : int
+        Radial index.
+    m : int
+        Azimuthal index.
+    """
     n = np.ceil((-3+np.sqrt(9+8*j))/2)
     m = 2*j - n*(n+2)
     return int(n), int(m)
 
 def fringe2nm(j):
+    """Gives the two indices n and m corresponding to the index for fringe convention.
+    
+    Parameters
+    ----------
+    j : int 
+        Index for fringe convention
+
+    Returns
+    -------
+    n : int
+        Radial index.
+    m : int
+        Azimuthal index.
+    """
     for n in range(j+1):
         for m in range(-n,n+2,2):
             if m < 0:

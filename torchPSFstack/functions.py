@@ -4,25 +4,24 @@ from colorsys import hls_to_rgb
 from skimage.morphology import erosion, dilation
 import copy 
 
-# def cart2pol(x,y):
-#     rho = torch.sqrt(x**2 + y**2)
-#     phi = torch.atan2(y, x)
-#     return rho, phi
-
-# def xy_mesh(size, step):
-#     u_vec = torch.arange(-size/2,
-#                     size/2,
-#                     step, dtype = torch.float32)
-#     uy, ux = torch.meshgrid(u_vec,u_vec)
-#     return ux, uy
-
-# def polar_mesh(size, step):
-#     ux, uy = xy_mesh(size, step)
-#     ur = torch.sqrt(ux**2 + uy**2)
-#     uphi = torch.atan2(uy, ux)
-#     return ur, uphi
 
 def crop_center(input, size):
+    """Trims an array to anew one of reduced size.
+
+    It assumes the image indices are the two frist ones.
+
+    Parameters
+    ----------
+    input : ndarray, Tensor
+        Stack of PSFs to be trimmed.
+    size : int
+        New size of the trimmed stack.
+
+    Returns
+    -------
+    ndarray, Tensor
+        Trimmed array
+    """
     x = input.shape[0]
     y = input.shape[1]
     start_x = (x-size)//2
@@ -32,6 +31,19 @@ def crop_center(input, size):
 
 
 def get_pupils_param_dict(model):
+    """Extracts the optimization parameters from the PSF model.
+    
+    Parameters
+    ----------
+    model : torchPSFStack module
+        Module use to retrieve an unknown pupil from a PSF stack.
+
+    Returns
+    -------
+    dic : dict
+        Dictionnary containing all the optimization parameters organized as
+        subdictionaries for each submodule of the PSFstack module.
+    """
     dic = {}
     md_list = []
     for name in model.state_dict().keys():
@@ -74,6 +86,19 @@ def get_pupils_param_dict(model):
 
 
 def outer_pixels(stack):
+    """Returns a boolean array selecting the corners of the PSF images in the stack.
+    
+    Parameters
+    ----------
+    stack : ndarray
+        Stack of PSFs.
+    
+    Returns
+    -------
+    ndarray of bool
+        Array being true for the four corners of the PSF images lying outside
+        the disk of diameter equal to the size of the images.
+    """
     shape_stack = list(stack.shape)
     [NX, NY] = np.meshgrid(np.arange(shape_stack[0]),
                            np.arange(shape_stack[1]))
@@ -84,6 +109,23 @@ def outer_pixels(stack):
     return outer_pix.reshape(shape_stack[:2]+[1]*len(shape_stack[2:]))
 
 def get_normNbck(stack):
+    """Returns an estimation for the background illumination and the amplitude factor.
+
+    Uses the four corners of the PSF images lying outside the disk of 
+    diameter equal to the size of the images to estimate the background, 
+    then subtracts it to estimate the overall amplitude factor.
+    Parameters
+    ----------
+    stack : ndarray
+        Stack of PSFs.
+    
+    Returns
+    -------
+    float
+        Overall amplitude factor
+    ndarray        
+        Background estimation for each diversity.
+    """
     outer_pix = outer_pixels(stack)
     bckgd = np.mean(estimate_background(stack, mask=outer_pix))
     std = np.std(stack, axis=(0,1), where=outer_pix)
@@ -96,11 +138,19 @@ def get_normNbck(stack):
     return np.sum(denoised_stack), bckgd
 
 def estimate_background(stack,mask=None):
-    """
-    ESTIMATE_BCKGD estimates the value of the background
-    illumination and its standard deviation on the images by 
-    computing the mean value on the pixels outside a circle of 
-    radius NX/2         
+    """Estimates the value of the background using a specified region.
+
+    Parameters
+    ----------
+    stack : ndarray
+        Stack of PSFs.
+    mask : ndarray of bool
+        Array specifying the region used to estimate the background.
+    
+    Returns
+    -------
+    ndarray        
+        Background estimation for each diversity.
     """  
     background = np.mean(stack, axis=(0,1), where=mask)
     return background
@@ -112,7 +162,34 @@ def colorize(z,
              transparent=False, 
              alpha=1., 
              max_threshold=1):
-             
+    """Transforms a complex valued array into an rgb one.
+    
+    The phase is encoded as hue and the amplitude as lightness. 
+
+    Parameters
+    ----------
+        z : ndarray
+            Complex valued array.
+        theme : {'dark', 'white'}, optional
+            For 'dark' the lightness value tends to zero as the amplitude 
+            diminishes and for 'white' it tends to one. 
+        saturation : float
+            Defines the saturation for hls
+        beta : float
+            Controls the scaling of lightness with respect to amplitude.
+        transparent : bool, optional
+            Whether to modify the alpha channel according to the amplitud.
+        alpha : float
+            Scaling for alpha channel controlling the opacity, 
+            'transparent' must be set to True.
+        max_threshold : float
+            Can be used to change the range for shown for the amplitude.
+
+    Returns
+    -------
+    c : ndarray
+        Returned array transformed into rgb format. 
+    """
     r = np.abs(z)
     r /= max_threshold*np.max(np.abs(r))
     arg = np.angle(z) 
@@ -130,3 +207,22 @@ def colorize(z,
         return np.concatenate([c,alpha_channel], axis = -1)
     else:
         return c
+    
+
+# def cart2pol(x,y):
+#     rho = torch.sqrt(x**2 + y**2)
+#     phi = torch.atan2(y, x)
+#     return rho, phi
+
+# def xy_mesh(size, step):
+#     u_vec = torch.arange(-size/2,
+#                     size/2,
+#                     step, dtype = torch.float32)
+#     uy, ux = torch.meshgrid(u_vec,u_vec)
+#     return ux, uy
+
+# def polar_mesh(size, step):
+#     ux, uy = xy_mesh(size, step)
+#     ur = torch.sqrt(ux**2 + uy**2)
+#     uphi = torch.atan2(uy, ux)
+#     return ur, uphi
