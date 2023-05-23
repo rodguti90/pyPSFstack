@@ -171,7 +171,7 @@ class Qplate(BirefringentWindow):
             The total size at the BFP used for computation.
         N_pts : int
             Number of points used for the computation.
-        c : float
+        q : float
             Defines the charge for the q_plate.
         alpha : float
             Defines the orientation.
