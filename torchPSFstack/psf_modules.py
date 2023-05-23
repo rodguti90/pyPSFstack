@@ -1,3 +1,5 @@
+"""Module containing the definition for the torchPSFStack models.
+"""
 import torch
 import torch.nn as nn
 import torch.fft as fft
@@ -5,16 +7,69 @@ import numpy as np
 from .blurring.blurring import torchNoBlurring
 from .functions import crop_center
 from .pupil import torchScalarWindow
+from .div_misal import torchDefocuses, torchTilts
 
 class torchPSFStack(nn.Module):
+    """Class used for retrieving pupils using stacks of PSF with PyTorch.
+    
+    Attributes
+    ----------
+    N_data : int
+        Size of the images in the PSF stack
+    pupils : List of torchPupil objects
+        List of sources, windows and aberrations used to model the stack.
+    N_pupils : int
+        Number of pupils being used
+    N_pts : int
+        Number of points used for the computation.
+    zdiversiy : torchZDiversity object
+        Object defining the defocus phase diversity.
+    pdiversity : torchPDiversity object
+        Object defining the polarization diversity.
+    blurring : torchBlurring object
+        Object defining the blurring model.
+    div_shape : list
+        Size od the diversities.
+    tilts : TorchTilts object
+        Object used to include diversity dependent tilts during teh retreival.
+    pb_bck : PhotoBleachBackground object
+        Object used to include photobleaching amplitude and background
+        illumination paramters in the optimization.
+    scale_factor : float 
+        Overall scale factor used to ameliorate initial conditions.
 
+    Methods
+    -------
+    set_pb_bck(bck, opt_b=False, opt_a=False)
+        Used to set the pb_bck parameter.
+    set_scale_factor(scale_factor)
+        Used to set overall scale factor.
+    """
     def __init__(self,
                  N_data,
                  pupils,                
                  zdiversity=None,
                  pdiversity=None,
-                 blurring=torchNoBlurring()
+                 blurring=torchNoBlurring(),
+                 tilts_flag=False
                  ):
+        """Constructor.
+        
+        Parameters
+        ----------
+        N_data : int
+            Size of the images in the PSF stack
+        pupils : List of torchPupil objects
+            List of sources, windows and aberrations used to model the stack.
+        zdiversiy : torchZDiversity object
+            Object defining the defocus phase diversity.
+        pdiversity : torchPDiversity object
+            Object defining the polarization diversity.
+        blurring : torchBlurring object
+            Object defining the blurring model.
+        tilts_flag : bool
+            Whether to include diversity dependent tilts during teh retreival.
+        """
         super(torchPSFStack, self).__init__()
         
         self.N_data = N_data
@@ -25,23 +80,20 @@ class torchPSFStack(nn.Module):
         
         self.N_pupils = len(self.pupils)
         self.N_pts = self.pupils[0].N_pts
+        self.div_shape = []
+        if self.zdiversity is not None:
+            self.div_shape += [self.zdiversity.N_zdiv]
+        if self.pdiversity is not None:
+            self.div_shape += [self.pdiversity.N_pdiv]
         
+        self.tilts = None
+        if tilts_flag:
+            self.tilts = torchTilts(self.div_shape,
+                                    pupils[0].aperture_size,
+                                    pupils[0].computation_size,
+                                    pupils[0].N_pts)
         self.pb_bck = None
         self.scale_factor = 1
-
-    def set_pb_bck(self, bck, opt_b=False, opt_a=False):
-        div_shape = []
-        if self.zdiversity is not None:
-            div_shape += [self.zdiversity.N_zdiv]
-        if self.pdiversity is not None:
-            div_shape += [self.pdiversity.N_pdiv]
-        self.pb_bck = PhotoBleachBackground(div_shape, 
-                                            b_est=bck,
-                                            opt_a=opt_a,
-                                            opt_b=opt_b)
-
-    def set_scale_factor(self, scale_factor):
-        self.scale_factor = scale_factor
 
     def forward(self):
 
@@ -54,6 +106,12 @@ class torchPSFStack(nn.Module):
         if self.zdiversity is not None:
             output = self.zdiversity(output)
 
+        if (self.pdiversity is not None) and (self.tilts is not None):
+            output = self.pdiversity.forward(output)
+
+        if self.tilts is not None:
+            output = self.tilts(output)
+
         output = fft.fftshift(
             fft.fft2(output,
                      dim=(0,1),
@@ -62,8 +120,11 @@ class torchPSFStack(nn.Module):
     
         output = crop_center(output, self.N_data)
         
-        if self.pdiversity is not None:
+        if (self.pdiversity is not None) and (self.tilts is None):
             output = self.pdiversity.forward(output)
+
+        # if self.pdiversity is not None:
+        #     output = self.pdiversity.forward(output)
 
         # output = torch.sum(torch.abs(output)**2,dim=(-2,-1))
         output = self.blurring(output)
@@ -73,8 +134,59 @@ class torchPSFStack(nn.Module):
 
         return output
 
+    def set_pb_bck(self, bck, opt_b=False, opt_a=False):
+        """Sets the pb_bck parameter.
+         
+        This parameter is a PhotoBleachBackground object used for 
+        photobleaching amplitude and background illumination.
+
+        Parameters
+        ----------
+        bck : float
+            Estimate for the background 
+        opt_b : bool
+            Whether to include background as optimization parameters.
+        opt_a : bool
+            Whether to include amplitudes as optimization parameters.
+        """
+        # div_shape = []
+        # if self.zdiversity is not None:
+        #     div_shape += [self.zdiversity.N_zdiv]
+        # if self.pdiversity is not None:
+        #     div_shape += [self.pdiversity.N_pdiv]
+        self.pb_bck = PhotoBleachBackground(self.div_shape, 
+                                            b_est=bck,
+                                            opt_a=opt_a,
+                                            opt_b=opt_b)
+
+    def set_scale_factor(self, scale_factor):
+        self.scale_factor = scale_factor
+
+
 class PhotoBleachBackground(nn.Module):
+    """Class used to define the photobleaching and background illumination.
+    
+    Attributes
+    ----------
+    b : Tensor
+        Background illumination for each diversity.
+    a : Tensor 
+        Photobleaching amplitudes for each diversity.
+    """
     def __init__(self, sh, b_est=0, opt_b=True, opt_a=True):
+        """Constructor.
+
+        Parameters
+        ----------
+        sh : list
+            Size of diversities.
+        b_est : float
+            Estimate for background illumination.
+        opt_b : bool
+            Whether to include background as optimization parameters.
+        opt_a : bool
+            Whether to include amplitudes as optimization parameters.
+        """
         super(PhotoBleachBackground, self).__init__()
 
         b = b_est * torch.ones(sh, dtype=torch.float)
@@ -91,120 +203,76 @@ class PhotoBleachBackground(nn.Module):
         return self.a * input + self.b
 
 
-class torchDefocuses(torchScalarWindow):
-    def __init__(self, sh, aperture_size=1., computation_size=4., 
-                 N_pts=128, nf=1.518,
-                 ):
-        super(torchDefocuses, self).__init__(aperture_size, computation_size, N_pts)
+
+
+# class torchPSFStackTiltsDefocuses(nn.Module):
+
+#     def __init__(self,
+#                  N_data,
+#                  pupils,                
+#                  zdiversity=None,
+#                  pdiversity=None,
+#                  tilts=None,
+#                  defocuses=None,
+#                  blurring=torchNoBlurring()
+#                  ):
+#         super(torchPSFStackTiltsDefocuses, self).__init__()
         
-        self.nf = nf
-        self.delta_zs = nn.Parameter(torch.zeros(sh, requires_grad=True, dtype=torch.float))
-        self.sh = list(sh)
-
-    def get_pupil_array(self):
-        ur, _ = self.polar_mesh()
-        npix = ur.shape[0]
-        ur = torch.reshape(ur.type(torch.cfloat), [npix]*2 + [1]*len(self.sh))
-        aperture = self.get_aperture(dummy_ind=len(self.sh))
-        defocus = torch.exp(1j*2*np.pi*self.nf*self.delta_zs*(1-ur**2)**(1/2))
-        return aperture * defocus
-
-class torchTilts(torchScalarWindow):
-    def __init__(self, sh,
-                 aperture_size=1., 
-                 computation_size=4., 
-                 N_pts=128):
-        super(torchTilts, self).__init__(aperture_size, computation_size, N_pts)
+#         self.N_data = N_data
+#         self.pupils = nn.ModuleList(pupils)
+#         self.zdiversity = zdiversity
+#         self.pdiversity = pdiversity
+#         self.tilts = tilts
+#         self.defocuses = defocuses
+#         self.blurring = blurring
         
-        self.sh = list(sh)
-        self.xt = nn.Parameter(torch.zeros(sh, requires_grad=True, dtype=torch.float))
-        self.yt = nn.Parameter(torch.zeros(sh, requires_grad=True, dtype=torch.float))
-
-    def get_pupil_array(self):
-
-        ux, uy = self.xy_mesh()
-        npix = ux.shape[0]
-        ux = torch.reshape(ux, [npix]*2 + [1]*len(self.sh) )
-        uy = torch.reshape(uy, [npix]*2 + [1]*len(self.sh) )
-        return torch.exp(1j*2*torch.pi* (self.xt * ux + self.yt *uy))
-
-
-class torchPSFStackTilts(nn.Module):
-
-    def __init__(self,
-                 N_data,
-                 pupils,                
-                 zdiversity=None,
-                 pdiversity=None,
-                 tilts=None,
-                 defocuses=None,
-                 blurring=torchNoBlurring()
-                 ):
-        super(torchPSFStackTilts, self).__init__()
+#         self.N_pupils = len(self.pupils)
+#         self.N_pts = self.pupils[0].N_pts
         
-        self.N_data = N_data
-        self.pupils = nn.ModuleList(pupils)
-        self.zdiversity = zdiversity
-        self.pdiversity = pdiversity
-        self.tilts = tilts
-        self.defocuses = defocuses
-        self.blurring = blurring
-        
-        self.N_pupils = len(self.pupils)
-        self.N_pts = self.pupils[0].N_pts
-        
-        self.pb_bck = None
-        self.scale_factor = 1
+#         self.pb_bck = None
+#         self.scale_factor = 1
 
-    def set_pb_bck(self, bck, opt_b=False, opt_a=False):
-        div_shape = []
-        if self.zdiversity is not None:
-            div_shape += [self.zdiversity.N_zdiv]
-        if self.pdiversity is not None:
-            div_shape += [self.pdiversity.N_pdiv]
-        self.pb_bck = PhotoBleachBackground(div_shape, 
-                                            b_est=bck,
-                                            opt_a=opt_a,
-                                            opt_b=opt_b)
+#     def set_pb_bck(self, bck, opt_b=False, opt_a=False):
+#         div_shape = []
+#         if self.zdiversity is not None:
+#             div_shape += [self.zdiversity.N_zdiv]
+#         if self.pdiversity is not None:
+#             div_shape += [self.pdiversity.N_pdiv]
+#         self.pb_bck = PhotoBleachBackground(div_shape, 
+#                                             b_est=bck,
+#                                             opt_a=opt_a,
+#                                             opt_b=opt_b)
 
-    def set_scale_factor(self, scale_factor):
-        self.scale_factor = scale_factor
+#     def set_scale_factor(self, scale_factor):
+#         self.scale_factor = scale_factor
 
-    def forward(self):
+#     def forward(self):
 
-        output = self.scale_factor**(1/2) * self.pupils[0]()
-        for ind in range(self.N_pupils-1):
-            output = self.pupils[ind+1](output)
+#         output = self.scale_factor**(1/2) * self.pupils[0]()
+#         for ind in range(self.N_pupils-1):
+#             output = self.pupils[ind+1](output)
+#         output = self.blurring.diversity(output)
+#         if self.zdiversity is not None:
+#             output = self.zdiversity(output)
+#         if self.pdiversity is not None:
+#             output = self.pdiversity.forward(output)
+#         if self.tilts is not None:
+#             output = self.tilts(output)
+#         if self.defocuses is not None:
+#             output = self.defocuses(output)
 
-        output = self.blurring.diversity(output)
+#         output = fft.fftshift(
+#             fft.fft2(output,
+#                      dim=(0,1),
+#                      s=(self.N_pts,self.N_pts)),
+#             dim=(0,1))/self.N_pts
+#         output = crop_center(output, self.N_data)
+#         # output = torch.sum(torch.abs(output)**2,dim=(-2,-1))
+#         output = self.blurring(output)
+#         if self.pb_bck is not None:
+#             output = self.pb_bck(output)
 
-        if self.zdiversity is not None:
-            output = self.zdiversity(output)
-
-        if self.pdiversity is not None:
-            output = self.pdiversity.forward(output)
-        
-        if self.tilts is not None:
-            output = self.tilts(output)
-
-        if self.defocuses is not None:
-            output = self.defocuses(output)
-
-        output = fft.fftshift(
-            fft.fft2(output,
-                     dim=(0,1),
-                     s=(self.N_pts,self.N_pts)),
-            dim=(0,1))/self.N_pts
-    
-        output = crop_center(output, self.N_data)
-        
-        # output = torch.sum(torch.abs(output)**2,dim=(-2,-1))
-        output = self.blurring(output)
-        
-        if self.pb_bck is not None:
-            output = self.pb_bck(output)
-
-        return output
+#         return output
 
 
 # class ScalarPSF(nn.Module):
