@@ -4,7 +4,7 @@ from ..pupil import PupilDiversity
 
 class NoDiversity():
     """Class defining the absence of diversity."""
-    def forward(self, input):
+    def _forward(self, input):
         return input
 
 class ZDiversity(PupilDiversity):

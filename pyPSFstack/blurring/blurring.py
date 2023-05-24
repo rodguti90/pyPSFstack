@@ -125,7 +125,7 @@ class ExactBlurring(Blurring):
 
     def compute_blurred_psfs(self, input, orientation):
         output = self._compute_intensity(input, orientation)
-        output = self.bk.forward(output)
+        output = self.bk._forward(output)
         return np.abs(output)
 
 
