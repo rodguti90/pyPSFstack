@@ -21,4 +21,4 @@ core
 from . import blurring
 from . import diversities
 from . import pupils
-from . import core
+from .core import PSFStack
