@@ -7,11 +7,11 @@ from tqdm import tqdm
 from pyPSFstack.core import PSFStack
 from pyPSFstack.functions import trim_stack
 
-from torchPSFstack.psf_modules import torchPSFStack, torchPSFStackTilts, torchTilts,torchDefocuses
+from torchPSFstack.psf_modules import torchPSFStack#, torchPSFStackTilts, torchTilts,torchDefocuses
 from torchPSFstack.pupils.sources import torchDipoleInterfaceSource
 from torchPSFstack.pupils.windows import torchDefocus, torchSEO
 from torchPSFstack.pupils.aberrations import torchScalarZernike, \
-    torchUnitaryZernike, torchUnitaryPixels, torchApodizedUnitary, torchScalarPixels
+    torchUnitaryZernike, torchUnitaryPixels, torchScalarPixels#, torchApodizedUnitary
 from torchPSFstack.diversities.pupil_diversities import torchZDiversity
 from torchPSFstack.diversities.pola_diversities import torchPDiversity_QWP, \
     torchPDiversity_LP, torchPDiversity_Compound, torchPDiversity_GWP
@@ -176,7 +176,7 @@ def seq_cpx_corr(Yseq,Yref=None,mask=None):
 def find_pupil(data_stack, params, lr=3e-2, n_epochs = 200, 
                loss_fn=loss_loglikelihood, pdiv='qwplp', blurring=torchNoBlurring(), 
                opt_def=True, opt_delta=False, abe='zernike', opt_a=False,
-               tilts=False, defocuses=False, seo=False):
+               tilts=False, seo=False): #defocuses=False,
 
     tsrc = torchDipoleInterfaceSource(**params['pupil'],**params['source'],opt_delta=opt_delta)
     tpupil_sequence = [tsrc]
@@ -194,8 +194,8 @@ def find_pupil(data_stack, params, lr=3e-2, n_epochs = 200,
             twdw = torchUnitaryZernike(**params['pupil'], **params['aberrations'])
         elif abe=='pix':
             twdw = torchUnitaryPixels(**params['pupil'])
-        elif abe=='apodized':
-            twdw = torchApodizedUnitary(**params['pupil'], **params['aberrations'])
+        # elif abe=='apodized':
+        #     twdw = torchApodizedUnitary(**params['pupil'], **params['aberrations'])
         elif abe=='scalar':
             twdw = torchScalarZernike(**params['pupil'], **params['aberrations'])
         elif abe=='scalar_pix':
@@ -219,35 +219,36 @@ def find_pupil(data_stack, params, lr=3e-2, n_epochs = 200,
         else:
             raise ValueError('Invalid pdiv option')
         
-        sh_divs = [len(params['zdiversity']['z_list']), len(tpdiv.jones_list)]
+        # sh_divs = [len(params['zdiversity']['z_list']), len(tpdiv.jones_list)]
 
     else:
         tzdiv = torchZDiversity(**params['zdiversity_np'], **params['pupil'])
         tpdiv=None
-        sh_divs = [len(params['zdiversity_np']['z_list'])]
+        # sh_divs = [len(params['zdiversity_np']['z_list'])]
     
-    defs=None
-    if defocuses:
-        defs = torchDefocuses(sh_divs, **params['pupil'])
+    # defs=None
+    # if defocuses:
+    #     defs = torchDefocuses(sh_divs, **params['pupil'])
 
-    if tilts:
-        model_retrieved = torchPSFStackTilts(
-                        data_stack.shape[0],
-                        tpupil_sequence,
-                        zdiversity=tzdiv,
-                        pdiversity=tpdiv,
-                        tilts=torchTilts(sh_divs, **params['pupil']),
-                        defocuses=defs,
-                        blurring=blurring
-                        )
-    else:
-        model_retrieved = torchPSFStack(
-                        data_stack.shape[0],
-                        tpupil_sequence,
-                        zdiversity=tzdiv,
-                        pdiversity=tpdiv,
-                        blurring=blurring
-                        )
+    # if tilts:
+    #     model_retrieved = torchPSFStackTilts(
+    #                     data_stack.shape[0],
+    #                     tpupil_sequence,
+    #                     zdiversity=tzdiv,
+    #                     pdiversity=tpdiv,
+    #                     tilts=torchTilts(sh_divs, **params['pupil']),
+    #                     defocuses=defs,
+    #                     blurring=blurring
+    #                     )
+    # else:
+    model_retrieved = torchPSFStack(
+                    data_stack.shape[0],
+                    tpupil_sequence,
+                    zdiversity=tzdiv,
+                    pdiversity=tpdiv,
+                    blurring=blurring,
+                    tilts_flag=tilts
+                    )
 
 
 
