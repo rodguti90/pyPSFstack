@@ -15,8 +15,6 @@ diversities
     Classes defining phase and polarization diversities.
 pupils
     Classes defining pupils representing sources, aberrations and windows.
-core
-    Contains the main class pyPSFstack used to compute stacks of PSFs.
 """
 from . import blurring
 from . import diversities
