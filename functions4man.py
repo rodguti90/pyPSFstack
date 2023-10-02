@@ -33,6 +33,22 @@ psf_cmap = 'inferno'
 #     "font.family": "Helvetica"
 # })
 
+def plot_allzpstack(stack):
+    v_max = np.max(stack)
+    v_min = np.min(stack)
+    fig_w = 8#16
+    N_z, N_p = stack.shape[-2:]
+    
+    fig, axs = plt.subplots(N_z,N_p,figsize=(fig_w,N_z*fig_w/N_p), gridspec_kw={'wspace':.05, 'hspace':0.05})
+    for ind in range(N_p):
+        for indz in range(N_z):
+            im = axs[indz,ind].imshow(stack[...,indz,ind],vmin=v_min,vmax=v_max,cmap='inferno')
+    for ax in axs.ravel():
+        ax.set_axis_off()
+    
+    cb_ax = fig.add_axes([0.91,0.13,0.01,0.75])
+    fig.colorbar(im, cax=cb_ax)
+
 def plot_zpstack(stack, N_p=5, off_mid=0):
     v_max = np.max(stack)
     v_min = np.min(stack)
