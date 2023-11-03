@@ -1,5 +1,9 @@
 # pyPSFstack
 
+[![DOI](https://zenodo.org/badge/449654051.svg)](https://zenodo.org/doi/10.5281/zenodo.10069030)
+
+© Rodrigo Gutiérrez Cuevas
+
 Python library for the numerical modelling of PSF stacks used to 
 characterize single molecule fluorescence microscope.
 
